@@ -7,5 +7,7 @@ tmp/
 dist/
 build/
 coverage/
+/pulsefold
+*.test
 .idea/
 .vscode/
