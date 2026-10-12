@@ -17,12 +17,11 @@ docker run ... pulsefold shadow
 or:
 
 ```bash
-pulsefold init
-pulsefold doctor
-pulsefold shadow
+pulsefold replay --input telemetry.otlp
+pulsefold report
 ```
 
-Then point an OTLP exporter at PulseFold and configure the existing destination.
+The common V0 path uses offline OTLP replay. A replicated live input, where configured, is explicitly best effort and non-authoritative. V0 does not replace or modify the existing production forwarding configuration.
 
 ## 3. Configuration principles
 
@@ -39,29 +38,22 @@ Then point an OTLP exporter at PulseFold and configure the existing destination.
 ```yaml
 mode: shadow
 
-ingest:
-  otlp:
-    grpc: 0.0.0.0:4317
-    http: 0.0.0.0:4318
+input:
+  mode: replay # replay or best_effort_replica
+  otlp_file: ./telemetry.otlp
 
-export:
-  otlp:
-    endpoint: http://existing-collector:4317
-
-compaction:
+analysis:
   exact_duplicates: true
   template_analysis: true
-  active: false
+  max_entries: 100000
+  max_bytes: 256MiB
+  active_compaction: false
 
-incidents:
-  enabled: true
+redaction:
+  policy_version: v1
 
-notifications:
-  webhook:
-    enabled: false
-
-ai:
-  enabled: false
+report:
+  output: ./pulsefold-report.json
 ```
 
 This is illustrative, not a final schema.
@@ -70,20 +62,20 @@ This is illustrative, not a final schema.
 
 Potential checks:
 - ports available
-- exporter reachable
-- credentials readable
 - write access for local state
-- object archive connectivity
-- notification connectivity
-- model endpoint connectivity
+- replay input readable and parseable
+- redaction policy valid
+- report destination writable
+- configured state caps valid
 - clock sanity
-- configuration conflicts
+- configuration does not enable active compaction, incidents, routing or AI in V0
 
 ## 6. Deployment targets
 
 Priority:
 1. local Docker
 2. generic container runtime
-3. Kubernetes after core behaviour stabilises
+3. best-effort replica integration after replay behaviour is measured
+4. Kubernetes after core behaviour stabilises
 
 Cloud marketplace packaging is not an early goal.

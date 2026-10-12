@@ -34,6 +34,24 @@ Shadow mode is the initial adoption path.
 ### D-010
 AI does not make destructive retention decisions initially.
 
+### D-011
+V0 is a redacted, coverage-aware, logs-only shadow reduction analyser using offline OTLP replay or an explicitly best-effort replicated, non-authoritative stream.
+
+### D-012
+V0 does not modify production forwarding, perform active compaction, run incident state or routing, invoke a built-in investigator or claim generic dollar savings.
+
+### D-013
+Shadow analysis and production forwarding run in separate failure domains. Shadow reports disclose coverage and analysis loss.
+
+### D-014
+Redaction precedes canonicalisation and all telemetry derivation.
+
+### D-015
+Evidence manifests are immutable while content follows a retention and erasure lifecycle.
+
+### D-016
+External investigation contracts precede a built-in investigator.
+
 ## Pending
 
 ### P-001
@@ -53,3 +71,6 @@ First supported notification adapter after webhook.
 
 ### P-006
 First model/provider adapters.
+
+### P-007
+The implementation of evidence content storage, key management and retention.

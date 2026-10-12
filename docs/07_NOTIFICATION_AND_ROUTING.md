@@ -1,5 +1,7 @@
 # Notification and Routing
 
+**Phase boundary:** Notification routing is a post-V0 incident-intelligence capability. V0 produces no notifications.
+
 ## 1. Goal
 
 Route useful incident information to humans and agents without coupling PulseFold to one collaboration product.

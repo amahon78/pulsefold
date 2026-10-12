@@ -14,12 +14,12 @@ The common path must not require a specific:
 ## PR-002: Shadow mode
 
 PulseFold must support a mode where:
-- all inbound telemetry is forwarded unchanged
+- logs are accepted from offline OTLP replay or an explicitly best-effort replicated, non-authoritative stream
 - optimisation opportunities are analysed
-- no event is dropped or transformed for downstream output
 - a reduction opportunity report is produced
+- coverage, capture drops, malformed records, state overflow and analysis failures are reported
 
-Shadow mode is the default for new installations.
+V0 does not own or modify production forwarding. A production replication topology must not be represented as complete or fail-open unless it has been tested.
 
 ## PR-003: Deterministic compaction
 
@@ -38,6 +38,8 @@ Every compacted group must retain enough metadata to understand:
 - transformation policy
 - raw evidence location where configured
 
+Evidence provenance is immutable, while content follows a retention and erasure lifecycle.
+
 ## PR-005: Rare event protection
 
 PulseFold must favour preservation of unique and rare telemetry.
@@ -46,9 +48,13 @@ Any policy that can discard rare events requires explicit configuration and a wa
 
 ## PR-006: Fail open telemetry behaviour
 
-Where possible, a PulseFold processing failure should result in unmodified forwarding rather than silent telemetry loss.
+Where PulseFold later participates in a forwarding path, a processing failure should result in unmodified forwarding rather than silent telemetry loss where possible.
 
 If fail open cannot be guaranteed for a mode, the limitation must be explicit.
+
+V0 makes no forwarding availability claim because it does not own production forwarding.
+
+The following proactive, incident, routing and investigation requirements are post-V0 capabilities.
 
 ## PR-007: Proactive signals
 
@@ -118,10 +124,9 @@ The system should distinguish:
 Target common path:
 
 1. start PulseFold
-2. point OTLP traffic at PulseFold
-3. configure existing destination
-4. run shadow mode
-5. receive a report
+2. provide OTLP replay data or configure an explicit best-effort replica
+3. run shadow analysis
+4. receive a coverage-aware report
 
 The target for a technically competent user is under ten minutes excluding external vendor credential creation.
 
@@ -140,7 +145,7 @@ Configuration changes, compaction policy changes and incident investigation acti
 
 ## PR-017: Secret safety
 
-The system must support telemetry redaction before model exposure.
+The system must support telemetry redaction before canonicalisation, fingerprinting, template training, persistence, reporting and model exposure.
 
 ## PR-018: Resource control
 
@@ -150,3 +155,13 @@ Operators must be able to set:
 - processing concurrency
 - model call budgets
 - investigation rate limits
+
+Stateful analysis must also expose hard entry, byte and time bounds with observable overflow behaviour.
+
+## PR-019: V0 non-interference
+
+V0 must not modify production forwarding, perform active compaction, provide an incident engine, provide notification routing or invoke a built-in AI investigator.
+
+## PR-020: Honest reduction reporting
+
+V0 reports counterfactual reduction opportunity, not generic customer savings. Raw canonical bytes, wire bytes and billable units must be distinguished. A monetary estimate requires an operator-supplied billing model and cost inputs.

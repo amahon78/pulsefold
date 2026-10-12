@@ -1,6 +1,6 @@
 # PulseFold Project State
 
-**Status:** Phase 0, product and architecture definition  
+**Status:** V0 scope frozen, Phase 1 telemetry laboratory ready
 **Working name:** PulseFold  
 **Tagline:** Keep the evidence. Fold the noise.  
 **Repository owner:** Personal/open source project  
@@ -17,6 +17,13 @@ The following are treated as locked until superseded by an ADR:
 - The initial agent model is read only.
 - Evidence must support incident conclusions.
 - Shadow mode precedes active telemetry compaction.
+- V0 is a redacted, coverage-aware, logs-only shadow reduction analyser.
+- V0 accepts offline OTLP replay or an explicitly best-effort replicated, non-authoritative stream.
+- V0 does not modify production forwarding, perform active compaction, run incidents or routing, invoke a built-in investigator or claim generic dollar savings.
+- Shadow analysis and production forwarding have separate failure domains.
+- Redaction precedes telemetry derivation.
+- Evidence uses immutable provenance manifests with lifecycle-managed content.
+- External investigation contracts precede a built-in investigator.
 - LLMs do not control irreversible deletion in the initial architecture.
 - Existing observability backends are supported rather than replaced initially.
 - The first technical problem is safe telemetry optimisation.
@@ -36,25 +43,28 @@ The following are treated as locked until superseded by an ADR:
 
 ## Open decisions
 
-- Collector distribution versus standalone gateway.
+- Collector distribution versus standalone gateway after V0.
 - Exact compaction algorithm stack.
-- Raw evidence retention/reference design.
+- Content storage, key management and retention implementation for evidence manifests.
 - Initial metric and trace support depth.
 - Incident correlation algorithm.
-- Built in investigator scope versus external agent first.
+- Built in investigator scope after external-agent evaluation.
 - Configuration schema.
 - Licence.
 - Public benchmark corpus.
 - Minimum supported deployment footprint.
 
+## Phase 0 progress notes
+
+- 2026-10-12: PF-0001..PF-0005 research and PF-0006 independent architecture verification accepted. PF-0007 froze V0 and accepted ADRs 0007 through 0010.
+- Phase 1 benchmarks remain execution gates. No product implementation or benchmark result is implied by this status.
+
 ## Phase 0 exit condition
 
-No implementation phase begins until:
+Phase 1 implementation begins with the frozen V0 scope. Active compaction and later phases remain gated on:
 
-1. Competitive and ecosystem research is complete.
-2. Compaction approaches are benchmarked on representative datasets.
-3. The canonical data model is accepted.
-4. Threat model is reviewed.
-5. Evaluation methodology is accepted.
-6. V0 scope is frozen.
-7. The architecture has been challenged by at least two independent agent reviews.
+1. compaction approaches being benchmarked on representative datasets before active transformation
+2. evidence content storage and retention design being accepted before content archival
+3. threat-model and evaluation gates passing before the applicable release
+4. deterministic signal and incident evaluation being accepted before Phase 3
+5. external-agent and model evaluation being accepted before Phase 4

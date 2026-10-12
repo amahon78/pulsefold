@@ -1,11 +1,13 @@
 # Agent and Model Integration
 
+**Phase boundary:** V0 invokes no agent and contains no built-in investigator. This document defines later-phase direction only.
+
 ## 1. Two distinct concepts
 
 PulseFold must distinguish:
 
 ### Model provider
-A model endpoint used by PulseFold's built in investigator.
+A model endpoint that may be used by a future PulseFold built-in investigator.
 
 Examples:
 - OpenAI
@@ -26,6 +28,8 @@ Examples:
 These are not the same abstraction.
 
 ## 2. Built in model provider contract
+
+Deferred until external-agent integration has been evaluated.
 
 Conceptual interface:
 
@@ -54,26 +58,26 @@ The core investigation layer handles:
 
 ## 3. External agent event contract
 
-PulseFold should emit a stable structured package.
+PulseFold should define a stable structured package before building a built-in investigator. This is not a V0 runtime integration.
 
 Example:
 
 ```json
 {
   "event": "pulsefold.incident.investigation_requested",
-  "incident_id": "pf_...",
+  "subject_id": "pf_...",
   "severity": "high",
   "summary": "...",
   "signals": ["..."],
-  "evidence": ["pfe_1", "pfe_2"],
-  "tool_endpoint": "...",
-  "callback": "..."
+  "evidence": ["pfe_1", "pfe_2"]
 }
 ```
 
-The external agent may then query safe PulseFold tools.
+Future endpoints, callbacks, tools and credentials must be operator configured, scoped and bounded. They must never be selected from telemetry or model output.
 
 ## 4. Agent tools
+
+Future capability only. V0 exposes no agent tools.
 
 Read only initial tools:
 

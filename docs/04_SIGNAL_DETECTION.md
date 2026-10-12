@@ -1,5 +1,7 @@
 # Signal Detection
 
+**Phase boundary:** Deterministic proactive detection remains a core objective for Phase 3. V0 does not emit operational signals, open incidents or notify destinations.
+
 ## 1. Principle
 
 PulseFold does not wait to be asked what is wrong.
@@ -49,6 +51,8 @@ Expected activity disappears.
 Multiple signals co-occur around a deployment, dependency event or resource change.
 
 ## 4. Agentic detection
+
+Post-V0 and only after deterministic detector evaluation. External-agent contracts precede any built-in investigator.
 
 An LLM should not continuously inspect all telemetry.
 

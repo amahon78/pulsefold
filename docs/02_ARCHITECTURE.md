@@ -15,64 +15,43 @@ PulseFold is designed as a pipeline with explicit boundaries between:
 
 No layer should require AI merely because a later layer can use AI.
 
-## 2. Logical architecture
+## 2. V0 architecture
 
 ```text
-                 +-----------------------+
-                 | Applications / Cloud  |
-                 +-----------+-----------+
-                             |
-                          OTLP / adapters
-                             |
-                             v
-+-----------------------------------------------------------+
-|                    PulseFold Gateway                      |
-|                                                           |
-|  +------------+   +------------+   +------------------+   |
-|  | Normaliser |-->| Fingerprint|-->| Compaction       |   |
-|  +------------+   +------------+   | Analysis/Policy  |   |
-|                                     +--------+---------+   |
-|                                              |             |
-|                             +----------------+---------+   |
-|                             |                          |   |
-|                             v                          v   |
-|                       Signal Engine              OTLP Export|
-|                             |                          |   |
-|                             v                          v   |
-|                       Incident Engine          Existing O11y|
-|                             |                              |
-|                             v                              |
-|                       Evidence Layer                       |
-|                             |                              |
-|                +------------+------------+                 |
-|                |                         |                 |
-|                v                         v                 |
-|        Notification Router       Investigation Gateway     |
-+----------------+-------------------------+-----------------+
-                 |                         |
-       Slack/Teams/Webhook          Built-in / external agent
+Offline OTLP replay or explicit best-effort replica
+                         |
+                         v
+  redaction -> canonicalisation -> bounded C1/C2 analysis -> report manifest
+                         |                                      |
+                         +---------- coverage accounting --------+
+
+Production forwarding remains outside the V0 process and is not modified.
 ```
 
-## 3. Telemetry plane versus control plane
+V0 is logs-only. C1 and C2 are report-only candidates, not downstream transformations. V0 does not contain an incident engine, notification router or built-in investigator.
+
+## 3. Longer-term logical architecture
+
+The longer-term design retains explicit boundaries between telemetry transport, telemetry interpretation, deterministic compaction, signal detection, incident state, evidence manifests, investigation and routing. These capabilities are delivered in later phases only after the V0 safety and benchmark gates pass.
+
+## 4. Telemetry plane versus control plane
 
 ### Telemetry plane
 
 High throughput path.
 
-Responsibilities:
-- receive
-- parse
-- normalise
-- fingerprint
+Future responsibilities:
+- receive and parse
+- redact before derivation
+- normalise and fingerprint
 - apply deterministic policy
-- forward
-- emit aggregate metadata
+- forward and emit aggregate metadata
 
 Requirements:
 - bounded latency
 - bounded memory
 - graceful backpressure
-- fail open where configured
+- explicitly tested forwarding behaviour where configured
 - no required external LLM call
 
 ### Control/intelligence plane
@@ -90,7 +69,9 @@ Responsibilities:
 
 A slow model provider must not block telemetry flow.
 
-## 4. Canonical telemetry
+V0 analysis is a separate process and has no dependency on this future control plane.
+
+## 5. Canonical telemetry
 
 OpenTelemetry semantic structures are the preferred canonical format.
 
@@ -103,18 +84,24 @@ Core components should consume:
 - resource attributes
 - scope attributes
 
-## 5. Compaction pipeline
+## 6. Compaction pipeline
 
 Proposed stages:
 
 ### Stage C0: pass through
 No transformation.
 
+V0 uses C0 only for its analysis input. It does not forward telemetry.
+
 ### Stage C1: exact duplicate aggregation
 Group identical events within a bounded time window.
 
+V0 reports opportunities only. Any future active C1 policy must use collision-safe identity, full equality verification and bounded state.
+
 ### Stage C2: template aggregation
 Identify stable message structure and variable parameters.
+
+V0 reports source-provided and inferred template candidates only. A template is not globally stable evidence identity and cannot authorise deletion.
 
 ### Stage C3: repeated payload extraction
 Detect repeated large payload sections and replace internal copies with a content reference for PulseFold analysis.
@@ -126,9 +113,9 @@ Potential future stage based on event rarity, value and incident context.
 
 C4 is not part of V0 and must not be activated without evidence preservation guarantees.
 
-## 6. Evidence layer
+## 7. Evidence layer
 
-An evidence item is immutable once emitted.
+An evidence manifest is immutable once emitted. Evidence content is separately lifecycle-managed and may expire or be erased under policy.
 
 Suggested fields:
 
@@ -138,16 +125,16 @@ evidence_type
 source
 observed_at
 resource_identity
-content_hash
+content_commitment
 summary
-raw_reference
+content_reference
 transformation_reference
 sensitivity_class
 ```
 
-Investigations cite evidence IDs rather than copying unbounded telemetry into conclusions.
+V0 emits report provenance only. Content storage is not a V0 component.
 
-## 7. Signal engine
+## 8. Signal engine
 
 Two categories:
 
@@ -167,7 +154,9 @@ Correlate multiple weak signals into a candidate.
 
 Higher order detection may use statistical or model based methods later but must output the underlying observations.
 
-## 8. Incident engine
+## 9. Incident engine
+
+Not a V0 component. It remains a Phase 3 design and implementation area.
 
 An incident is a stateful object, not a notification.
 
@@ -180,13 +169,13 @@ Signals may:
 - trigger investigation
 - resolve an incident
 
-## 9. Investigation gateway
+## 10. Investigation gateway
 
 Two modes:
 
 ### Built in investigator
 
-PulseFold supplies:
+Deferred until after external-agent integration and evaluation. A future built-in investigator may supply:
 - investigation orchestration
 - read only tools
 - evidence constrained output
@@ -194,7 +183,7 @@ PulseFold supplies:
 
 ### External agent
 
-PulseFold emits:
+Future PulseFold emits:
 - incident
 - context
 - evidence references
@@ -203,7 +192,9 @@ PulseFold emits:
 
 This supports existing organisational agents such as internal Grok, Claude or custom bots.
 
-## 10. Notification router
+## 11. Notification router
+
+Not a V0 component. It remains a later incident-intelligence capability.
 
 Notifications consume incident events, not raw telemetry events.
 
@@ -215,9 +206,9 @@ Examples:
 - incident recovered
 - incident resolved
 
-## 11. Failure philosophy
+## 12. Failure philosophy
 
-PulseFold should never become a hidden single point of telemetry loss.
+PulseFold should never become a hidden single point of telemetry loss. V0 avoids owning the forwarding path rather than claiming transparent fail-open forwarding.
 
 Required design work:
 - queues with bounded behaviour

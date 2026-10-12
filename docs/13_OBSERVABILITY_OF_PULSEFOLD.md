@@ -4,7 +4,17 @@ PulseFold must expose its own health clearly.
 
 ## Required self metrics
 
-Telemetry plane:
+V0 analyser:
+- records accepted from replay or replica input
+- raw canonical bytes analysed
+- malformed or rejected records
+- replica capture drops where observable
+- state entries and bytes
+- state overflow and analysis failures
+- report generation latency
+
+Future telemetry plane:
+
 - events received
 - bytes received
 - events exported
@@ -17,7 +27,7 @@ Telemetry plane:
 - fail-open events
 - exporter failures
 
-Intelligence plane:
+Future intelligence plane:
 - signals emitted
 - incidents open
 - investigation requests

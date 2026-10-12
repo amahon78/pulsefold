@@ -4,7 +4,7 @@
 
 PulseFold is an open source, vendor neutral telemetry intelligence layer designed to reduce observability waste, detect emerging incidents proactively and give humans or AI agents the evidence they need to investigate production problems.
 
-PulseFold is not intended to be another dashboard, another log database or another model specific SRE bot. It sits between telemetry producers and existing observability destinations, using OpenTelemetry as the canonical telemetry interface.
+PulseFold is not intended to be another dashboard, another log database or another model specific SRE bot. It uses OpenTelemetry as the canonical telemetry interface and is designed to complement existing observability destinations.
 
 ## Product thesis
 
@@ -16,29 +16,13 @@ Modern observability wastes money and engineering time in two places:
 PulseFold addresses both.
 
 ```text
-Applications / Infrastructure
+V0: OTLP replay or independent best-effort replica
             |
             v
-      OpenTelemetry
-            |
-            v
-        PulseFold
-    +------------------+
-    | normalise        |
-    | fingerprint      |
-    | compact          |
-    | detect           |
-    | correlate        |
-    | preserve evidence|
-    +------------------+
-       |            |
-       v            v
-Existing backend   Incident intelligence
-                   |
-              +----+----+
-              |         |
-              v         v
-           Humans     Agents
+  redact -> bounded analysis -> coverage-aware report
+
+Future phases: deterministic optimisation -> signals -> evidence manifests
+            -> optional external agents and incident destinations
 ```
 
 ## Core principles
@@ -58,7 +42,9 @@ Existing backend   Incident intelligence
 
 ## Initial scope
 
-PulseFold V0 will answer:
+PulseFold V0 is frozen as a redacted, coverage-aware, logs-only shadow reduction analyser. It accepts offline OTLP replay or an explicitly best-effort replicated, non-authoritative stream. It does not modify production forwarding, compact telemetry, run incidents or invoke AI.
+
+V0 will answer:
 
 > How much telemetry are you wasting, and what can be compacted safely?
 
@@ -68,7 +54,7 @@ PulseFold V1 will answer:
 
 ## Current status
 
-**Planning and specification phase. No production code should be written until the Phase 0 exit criteria are met.**
+**V0 scope is frozen. Phase 1 implementation is limited to the V0 analyser and its benchmark harness.**
 
 See:
 

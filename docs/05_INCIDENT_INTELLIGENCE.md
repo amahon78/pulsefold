@@ -1,5 +1,7 @@
 # Incident Intelligence
 
+**Phase boundary:** This is a post-V0, Phase 3 capability. V0 has no incident engine, state machine or notification routing.
+
 ## 1. Incident model
 
 An incident represents an evolving operational hypothesis supported by evidence.
@@ -91,6 +93,8 @@ Best supported explanation after investigation.
 Proposed action, not a factual observation.
 
 ## 6. Proactive agent flow
+
+This is a future flow. Deterministic signals and evidence manifests must be evaluated before it is implemented.
 
 ```text
 Signal threshold reached

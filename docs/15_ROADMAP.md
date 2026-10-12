@@ -2,12 +2,13 @@
 
 ## Milestone 0: Architecture ready
 
-Exit:
-- research complete
-- ADRs accepted
-- V0 scope frozen
-- benchmarks defined
-- threat model challenged
+**Status:** Complete, 2026-10-12.
+
+Delivered:
+- accepted Phase 0 research and independent architecture review
+- ADRs 0001 through 0010
+- frozen V0 scope
+- benchmark definitions and threat-model reconciliation
 
 ## Milestone 1: Shadow
 
@@ -16,11 +17,12 @@ User outcome:
 > PulseFold shows me how much telemetry could be reduced without changing what I currently send downstream.
 
 Exit:
-- OTLP pass-through
-- reduction analysis
-- report
-- performance baseline
-- no semantic telemetry changes
+- logs-only OTLP replay or explicitly best-effort replicated input
+- redaction before derivation
+- bounded report-only C1 and C2 analysis
+- coverage-aware, versioned reduction report
+- fault and performance benchmark baseline
+- no production-forwarding modification, active compaction, incidents, routing or AI
 
 ## Milestone 2: Compact
 
@@ -56,8 +58,8 @@ User outcome:
 
 Exit:
 - read only tools
-- model abstraction
-- external agent contract
+- external agent contract first
+- model abstraction after external-agent evaluation
 - evidence constrained outputs
 - evaluations
 

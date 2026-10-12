@@ -24,7 +24,7 @@ Learned or configured event structure.
 Aggregation of repeated telemetry under a defined policy.
 
 ### Evidence
-Immutable reference used by signals and investigations.
+Immutable provenance manifest used by future signals and investigations. Evidence content is separately lifecycle-managed.
 
 ### Signal
 Machine observation that may warrant attention.
@@ -48,7 +48,7 @@ IDs should be:
 
 ## 4. Evidence references
 
-Evidence should prefer immutable content references.
+Evidence manifests should use policy-scoped content commitments and lifecycle-managed content references. A raw content hash must not be assumed safe to retain or disclose.
 
 An evidence reference should state whether the source is:
 - inline
@@ -56,6 +56,8 @@ An evidence reference should state whether the source is:
 - object archive
 - external observability backend
 - cloud provider
+
+An erasure or expiry event records a tombstone with its reason and time. The manifest remains resolvable as unavailable by policy.
 
 ## 5. Sensitivity
 
@@ -66,3 +68,7 @@ Proposed sensitivity classes:
 - restricted
 
 Model/provider policy can restrict which classes may cross an external boundary.
+
+## 6. V0 report provenance
+
+V0 requires only report provenance: source partition, observed time range, redaction-policy version, analyser version, candidate-policy version, coverage counters and lineage references. V0 does not require an evidence-content store.

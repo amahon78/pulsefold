@@ -100,17 +100,24 @@ Outputs:
 
 Goal:
 
-> Ingest OTLP telemetry and accurately estimate safe reduction potential without modifying outbound telemetry.
+> Analyse logs-only OTLP replay or a best-effort, non-authoritative replica and accurately estimate safe reduction potential without modifying production forwarding.
 
 Deliverables:
 
-- OTLP receive and forward
-- fixture generator
-- exact duplicate analysis
-- template analysis
-- repeated payload analysis
-- shadow mode report
-- performance benchmark
+- offline OTLP replay and replica-input boundary
+- redacted truth-labelled fixture generator
+- bounded exact-duplicate opportunity analysis
+- report-only template analysis
+- coverage and economics accounting
+- versioned shadow reduction report
+- fault and performance benchmark
+
+Not Phase 1 deliverables:
+
+- an inline production forwarding gateway
+- active compaction or payload extraction
+- incident state, routing or notifications
+- a built-in investigator or model call
 
 ### Phase 2: safe compaction
 
@@ -120,17 +127,23 @@ Goal:
 
 No AI deletion decisions.
 
+Phase 2 begins only after Phase 1 demonstrates safety, coverage and resource bounds for the chosen candidates.
+
 ### Phase 3: proactive incident intelligence
 
 Goal:
 
 > Detect and correlate operational signals into stateful incidents and route useful context proactively.
 
+This remains a core product phase. It is not part of V0.
+
 ### Phase 4: agent investigation
 
 Goal:
 
 > Allow a chosen model or external agent to investigate incidents using safe tools and evidence constrained claims.
+
+External-agent contracts precede any built-in investigator.
 
 ### Phase 5: operational hardening
 
@@ -150,6 +163,7 @@ PulseFold should be rejected as not ready if any of the following are true:
 - switching model providers requires core changes
 - switching cloud providers requires core changes
 - PulseFold failure can silently black-hole telemetry
+- a shadow report hides incomplete coverage, state overflow or analysis failure
 - benchmarks are absent
 - incident evaluations have no known ground truth
 - threat modelling is treated as a later task
@@ -158,8 +172,10 @@ PulseFold should be rejected as not ready if any of the following are true:
 
 Telemetry:
 
-- byte reduction percentage
-- event reduction percentage
+- raw canonical bytes
+- encoded and compressed wire bytes where measured
+- counterfactual reduction opportunity
+- analysis coverage and exclusion rate
 - unique event preservation
 - compaction precision
 - reconstruction/evidence availability
@@ -193,7 +209,13 @@ Product:
 - configuration steps
 - upgrade failure rate
 
-## 8. Public project narrative
+## 8. V0 scope freeze
+
+V0 is a redacted, coverage-aware, logs-only shadow reduction analyser. It accepts offline OTLP replay or an explicitly best-effort replicated, non-authoritative stream. It produces a reproducible report and does not modify production forwarding.
+
+V0 does not perform active compaction, run an incident engine, route notifications, invoke a built-in investigator or make generic dollar-saving claims.
+
+## 9. Public project narrative
 
 PulseFold should be explainable in one sentence:
 

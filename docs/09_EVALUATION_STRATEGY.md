@@ -9,8 +9,10 @@ PulseFold should be measurable.
 ## 2. Telemetry evaluation
 
 ### Reduction
-- raw bytes
-- output bytes
+- raw canonical bytes
+- counterfactual output bytes
+- encoded and compressed wire bytes where measured
+- contract-specific billable units where supplied by the operator
 - raw event count
 - output event count
 - reduction by technique
@@ -22,6 +24,7 @@ PulseFold should be measurable.
 - parameter recovery
 - representative sample coverage
 - evidence reference validity
+- report coverage, exclusion and overflow visibility
 
 ### Performance
 - events/sec
@@ -33,15 +36,21 @@ PulseFold should be measurable.
 - behaviour under burst
 
 ### Failure
-- exporter unavailable
-- storage unavailable
+- blocked analysis output
+- replay or replica-input interruption
 - malformed telemetry
 - extremely high cardinality
 - giant payload
 - clock skew
 - process restart
 
+### V0 economics
+
+V0 evaluates reduction opportunity, not generic dollar savings. A monetary estimate requires an explicit customer billing model, retention assumptions and PulseFold operating costs.
+
 ## 3. Signal evaluation
+
+Post-V0. V0 does not generate operational signals.
 
 Known synthetic streams should measure:
 - detector precision
@@ -51,6 +60,8 @@ Known synthetic streams should measure:
 - suppression correctness
 
 ## 4. Incident evaluation
+
+Post-V0. V0 does not open or correlate incidents.
 
 Ground truth scenarios:
 - bad deployment
@@ -76,6 +87,8 @@ Measure:
 - time to resolve
 
 ## 5. Agent evaluation
+
+Post-V0. V0 invokes no models or agents.
 
 For each model/provider:
 
