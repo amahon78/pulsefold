@@ -1,8 +1,10 @@
 {
   "project": "PulseFold",
-  "status": "Phase 0",
+  "status": "Phase 1",
   "files": [
     "AGENTS.md",
+    "go.mod",
+    "go.sum",
     "PROJECT_STATE.md",
     "README.md",
     "TASK_BOARD.md",
@@ -33,6 +35,26 @@
     "docs/adr/0004-shadow-mode-first.md",
     "docs/adr/0005-evidence-before-conclusions.md",
     "docs/adr/0006-no-llm-destructive-retention-decisions.md",
+    "docs/adr/0007-isolated-shadow-analysis-and-coverage.md",
+    "docs/adr/0008-redaction-before-derivation.md",
+    "docs/adr/0009-evidence-manifest-and-content-lifecycle.md",
+    "docs/adr/0010-external-investigation-contract-first.md",
+    "docs/adr/0011-go-as-core-implementation-language.md",
+    "cmd/pulsefold/main.go",
+    "cmd/pulsefold/main_test.go",
+    "internal/c1/c1.go",
+    "internal/c1/c1_test.go",
+    "internal/c1/fuzz_test.go",
+    "internal/fixture/fixture.go",
+    "internal/fixture/fixture_test.go",
+    "internal/input/replay.go",
+    "internal/input/replay_test.go",
+    "internal/input/fuzz_test.go",
+    "internal/redaction/redaction.go",
+    "internal/redaction/redaction_test.go",
+    "internal/report/report.go",
+    "internal/runner/runner.go",
+    "internal/runner/runner_test.go",
     "examples/README.md"
   ]
 }

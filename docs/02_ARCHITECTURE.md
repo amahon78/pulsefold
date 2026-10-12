@@ -30,6 +30,8 @@ Production forwarding remains outside the V0 process and is not modified.
 
 V0 is logs-only. C1 and C2 are report-only candidates, not downstream transformations. V0 does not contain an incident engine, notification router or built-in investigator.
 
+The current Phase 1 slice implements only C1. It uses offline OTLP/JSON replay, a mandatory redaction boundary and bounded exact-duplicate analysis in one local process. This process is an analyser, not a forwarding component. C2 remains deferred to PF-1004.
+
 ## 3. Longer-term logical architecture
 
 The longer-term design retains explicit boundaries between telemetry transport, telemetry interpretation, deterministic compaction, signal detection, incident state, evidence manifests, investigation and routing. These capabilities are delivered in later phases only after the V0 safety and benchmark gates pass.

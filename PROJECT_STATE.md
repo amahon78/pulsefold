@@ -1,6 +1,6 @@
 # PulseFold Project State
 
-**Status:** V0 scope frozen, Phase 1 telemetry laboratory ready
+**Status:** V0 scope frozen, Phase 1 telemetry laboratory in progress
 **Working name:** PulseFold  
 **Tagline:** Keep the evidence. Fold the noise.  
 **Repository owner:** Personal/open source project  
@@ -24,6 +24,7 @@ The following are treated as locked until superseded by an ADR:
 - Redaction precedes telemetry derivation.
 - Evidence uses immutable provenance manifests with lifecycle-managed content.
 - External investigation contracts precede a built-in investigator.
+- Go is the core implementation language. The canonical module path is `github.com/amahon78/pulsefold`.
 - LLMs do not control irreversible deletion in the initial architecture.
 - Existing observability backends are supported rather than replaced initially.
 - The first technical problem is safe telemetry optimisation.
@@ -33,7 +34,6 @@ The following are treated as locked until superseded by an ADR:
 
 ## Proposed but not yet locked
 
-- Core implementation language: Go.
 - Build on or beside the OpenTelemetry Collector.
 - SQLite for lightweight local state.
 - Apache 2.0 licence.
@@ -57,7 +57,9 @@ The following are treated as locked until superseded by an ADR:
 ## Phase 0 progress notes
 
 - 2026-10-12: PF-0001..PF-0005 research and PF-0006 independent architecture verification accepted. PF-0007 froze V0 and accepted ADRs 0007 through 0010.
-- Phase 1 benchmarks remain execution gates. No product implementation or benchmark result is implied by this status.
+- 2026-10-12: ADR 0011 accepted Go and `github.com/amahon78/pulsefold` as the core implementation language and module path. PF-1001 accepted a bounded offline OTLP/JSON replay boundary. It is not a production forwarding path.
+- 2026-10-13: PF-1002 added deterministic, truth-labelled synthetic OTLP fixtures and the versioned `v1-fixture-safety` redaction boundary. PF-1003 added bounded, collision-safe, report-only C1 analysis and the initial machine-readable report command.
+- Phase 1 benchmarks remain execution gates. PF-1003 benchmark results do not imply C2 results, active-compaction safety or production readiness.
 
 ## Phase 0 exit condition
 

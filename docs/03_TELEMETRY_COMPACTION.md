@@ -19,6 +19,8 @@ PulseFold should maintain more than one identity:
 ### Exact identity
 Canonical, redacted stable event representation. A hash may be used only for bucketing; an active compaction policy must verify full equality before classifying records as duplicates.
 
+PF-1003 implements this as a report-only C1 identity. It includes redacted resource and scope attributes, schema URLs, scope name and version, severity, body, log attributes, event name, flags, trace ID and span ID. Attribute and structured-body key order are canonicalised, while value types remain distinct. Event and observed timestamps are intentionally excluded because recurring events are compared within one finite replay analysis window. A SHA-256 bucket is followed by byte-for-byte canonical equality verification.
+
 ### Structural/template identity
 Represents the event shape with variables removed.
 
@@ -158,3 +160,5 @@ Minimum output:
 ## 11. V0 boundary
 
 V0 is logs-only and accepts replayed or explicitly best-effort replicated input. It performs redacted, bounded C1 and C2 opportunity analysis only. C3 payload extraction and all active transformation are deferred to Phase 2 after safety gates pass.
+
+The current implementation supports C1 only. Its report labels canonical-byte reduction as a counterfactual opportunity. It does not measure compressed wire bytes, vendor billable units or customer financial savings.

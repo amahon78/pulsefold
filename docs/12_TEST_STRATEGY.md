@@ -11,6 +11,12 @@ Compaction invariants, hash behaviour, round-trip/reference behaviour.
 ### Integration
 OTLP replay, report persistence and later storage, webhooks and provider adapters.
 
+PF-1001 covers valid OTLP/JSON replay across resources and services, structured bodies, empty and malformed input, unsupported values and source contracts, deterministic coverage, bounded input and cancellation. It also verifies that malformed-input errors do not contain the supplied telemetry text.
+
+PF-1002 adds seeded synthetic fixtures with independent C1 grouping truth, fake secret-shaped values, high-cardinality fields, large values and adversarial near-duplicates. Redaction tests verify that fixture secrets do not cross into cloned redacted records, canonical C1 identities, JSON reports or diagnostics.
+
+PF-1003 tests C1 ordinary and absent duplicates, resource and severity boundaries, reordered structured values, string versus numeric distinction, forced hash-bucket collisions, entry and byte caps, oversized identities, high-cardinality inputs, cancellation and input immutability. Bounded fuzz targets exercise the OTLP/JSON boundary and C1 canonicalisation. Benchmarks cover repeated, unique, high-cardinality and large-body inputs.
+
 ### Scenario
 Synthetic end-to-end replay and report flows. Incident flows are post-V0.
 

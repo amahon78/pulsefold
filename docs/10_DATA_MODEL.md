@@ -72,3 +72,9 @@ Model/provider policy can restrict which classes may cross an external boundary.
 ## 6. V0 report provenance
 
 V0 requires only report provenance: source partition, observed time range, redaction-policy version, analyser version, candidate-policy version, coverage counters and lineage references. V0 does not require an evidence-content store.
+
+## 7. Implemented V0 report fields
+
+The initial JSON report has schema version `pulsefold/v0alpha1`. It records source identity and delivery class, analysis interval, input coverage, redaction-policy version, analyser version and C1 candidate-policy and canonicalisation versions. C1 fields include records presented and analysed, unique identities, duplicate groups and records, counterfactual record and canonical-byte counts, exclusions and state-cap status.
+
+The report contains no telemetry body, attribute value, canonical identity, fingerprint or raw error text. Its C1 statement explicitly describes a counterfactual reduction opportunity, not observed financial saving.

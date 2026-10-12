@@ -60,13 +60,22 @@ Freeze the first executable scope after research.
 ## Phase 1: Telemetry laboratory
 
 ### PF-1001: Offline OTLP replay and replica-input boundary
+**Status:** Complete (2026-10-12).
 Accept logs-only OTLP replay. Document any replicated input as best effort and non-authoritative. Do not modify production forwarding.
 
+**Delivered:** bounded single-request OTLP/JSON offline replay, deterministic coverage accounting and a source contract that reserves replicated input for an explicit best-effort, non-authoritative source.
+
 ### PF-1002: Redacted, truth-labelled telemetry fixture framework
+**Status:** Complete (2026-10-13).
 Create deterministic synthetic fixtures with coverage, secret-shaped values, prompt-injection strings, high cardinality and expected grouping truth.
 
+**Delivered:** seeded synthetic multi-service OTLP logs with independently represented C1 truth, adversarial near-duplicates, high-cardinality fields, large values and fake secret-shaped values. The versioned redaction boundary precedes all current derivation.
+
 ### PF-1003: Canonicalisation and bounded exact-duplicate opportunity analysis
+**Status:** Complete (2026-10-13).
 Measure report-only C1 opportunities with collision-safe identity, hard state caps and visible overflow accounting.
+
+**Delivered:** typed, order-independent canonical identities with full equality verification after SHA-256 bucketing, explicit entry, state-byte and identity-byte limits, deterministic JSON reporting and C1 benchmarks. C1 is report-only and does not modify replay input.
 
 ### PF-1004: Report-only template analysis benchmark
 Benchmark source-provided templates and inferred templates. Measure unsafe merges, novelty preservation and cross-instance agreement. No template-driven transformation.

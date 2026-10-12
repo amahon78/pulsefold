@@ -52,10 +52,10 @@ Evidence manifests are immutable while content follows a retention and erasure l
 ### D-016
 External investigation contracts precede a built-in investigator.
 
-## Pending
+### D-017
+Go is the core implementation language. The canonical module path is `github.com/amahon78/pulsefold`.
 
-### P-001
-Go as core implementation language.
+## Pending
 
 ### P-002
 Collector distribution versus standalone gateway.
