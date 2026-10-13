@@ -96,7 +96,10 @@ Implement only the manifest and report provenance needed by V0. Defer evidence c
 **Delivered:** a payload-free evidence manifest on every complete and failure report, with versions, opaque source references, delivery class, analysis interval, completion and coverage state, fixed capture-to-report lineage reusing PF-1005 classifications, `not_stored` content state, a separate lifecycle record type and an unauthenticated, non-self-referential SHA-256 integrity commitment. Source labels are validated and never echo paths or credential-shaped values. There is no content store, signing or attestation.
 
 ### PF-1007: Coverage-aware shadow reduction report
+**Status:** Complete (2026-10-13).
 Produce a reproducible versioned report with C1/C2 opportunities, safety exclusions and no generic dollar-saving claim.
+
+**Delivered:** terminal text is the default `pulsefold analyse` output and `--format json` provides the machine-readable equivalent. Both output modes expose coverage, exclusions, C1 counterfactual exact repetition, C2 inferred structural candidates, optional scoped billing estimates, unavailable measurements, deterministic limitations and PF-1006 manifest integrity status without telemetry content or source paths.
 
 ### PF-1008: Fault and performance benchmark harness
 Test replay, restart, blocked analysis output, malformed data, giant payloads, high cardinality and bounded-resource behaviour.

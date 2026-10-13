@@ -37,6 +37,7 @@ type Report struct {
 	AnalysisInterval       AnalysisInterval     `json:"analysis_interval"`
 	Coverage               Coverage             `json:"coverage"`
 	Accounting             accounting.Result    `json:"accounting"`
+	Limitations            []string             `json:"limitations"`
 	Manifest               *provenance.Manifest `json:"manifest,omitempty"`
 	C1                     *C1                  `json:"c1,omitempty"`
 	C2                     *C2                  `json:"c2,omitempty"`
@@ -178,6 +179,7 @@ func Complete(replay input.ReplayResult, policyVersion, analyserVersion string, 
 			"Correctness and cross-instance agreement require independently labelled evaluation data.",
 		},
 	}
+	report.Limitations = limitations(report)
 	attachManifest(&report, replay, policyVersion, &result, &c2Result)
 	return report
 }
@@ -186,6 +188,7 @@ func InputFailure(replay input.ReplayResult, analyserVersion, code string) Repor
 	report := base(replay, analyserVersion)
 	report.Status = StatusInputFailed
 	report.Failure = &Failure{Stage: "input", Code: code}
+	report.Limitations = limitations(report)
 	attachManifest(&report, replay, "", nil, nil)
 	return report
 }
@@ -195,6 +198,7 @@ func AnalysisFailure(replay input.ReplayResult, policyVersion, analyserVersion, 
 	report.Status = StatusAnalysisFailed
 	report.RedactionPolicyVersion = policyVersion
 	report.Failure = &Failure{Stage: "analysis", Code: code}
+	report.Limitations = limitations(report)
 	attachManifest(&report, replay, policyVersion, nil, nil)
 	return report
 }
@@ -235,6 +239,53 @@ func coverage(value input.Coverage) Coverage {
 		CaptureErrors: value.CaptureErrors, InputBytesRead: value.InputBytesRead, InputBytesKnown: value.InputBytesKnown,
 		InputByteLimitHit: value.InputByteLimitHit,
 	}
+}
+
+// limitations returns concise, deterministic statements that constrain the
+// interpretation of this particular shadow report. They are report content,
+// rather than diagnostics, and are therefore covered by its commitment.
+func limitations(value Report) []string {
+	items := []string{
+		"Shadow analysis only: PulseFold did not modify, suppress, compact or forward telemetry.",
+		"The report stores no evidence content and its integrity commitment is not authentication.",
+	}
+	if value.Status != StatusComplete && value.Failure != nil {
+		items = append(items, "Analysis did not complete: "+value.Failure.Stage+"/"+value.Failure.Code+".")
+	}
+	if !value.Accounting.Coverage.Input.RecordsObservedKnown {
+		items = append(items, "Observed-record coverage is unknown: "+value.Accounting.Coverage.Input.AcceptedRecordCoverage.Reason+".")
+	}
+	if value.Accounting.Coverage.Input.InputByteLimitHit {
+		items = append(items, "Input capture reached its byte limit; no opportunity is extrapolated beyond the captured input.")
+	}
+	if value.C1 != nil && stageIncomplete(value.Accounting.Coverage.C1) {
+		items = append(items, "C1 analysis coverage is incomplete; only the reported eligible and analysed counts support its opportunity.")
+	}
+	if value.C2 != nil && stageIncomplete(value.Accounting.Coverage.C2) {
+		items = append(items, "C2 analysis coverage is incomplete; no structural opportunity is extrapolated beyond its analysed representatives.")
+	}
+	if value.C1 != nil && value.C1.ExcludedRecords > 0 {
+		items = append(items, "C1 excluded records outside its bounded analysis state.")
+	}
+	if value.C2 != nil {
+		items = append(items, "C2 is an inferred structural candidate opportunity, not verified or removable telemetry.")
+		if value.C2.ExcludedRecords > 0 {
+			items = append(items, "C2 excluded records outside its supported body types or bounded analysis state.")
+		}
+	}
+	if !value.Accounting.Wire.Known {
+		items = append(items, "Wire bytes are unknown because this offline analyser does not measure transport encoding, batching or compression.")
+	}
+	if !value.Accounting.Billing.Available {
+		items = append(items, "Estimated gross observability cost opportunity is unavailable: "+value.Accounting.Billing.Reason+".")
+	} else {
+		items = append(items, "Economic estimates use an operator-supplied generic billing model and are not net or realised savings.")
+	}
+	return items
+}
+
+func stageIncomplete(value accounting.StageCoverage) bool {
+	return !value.Completed || !value.Coverage.Known || value.Analysed < value.Eligible
 }
 
 // now is the volatile manifest generation clock. It is excluded from the

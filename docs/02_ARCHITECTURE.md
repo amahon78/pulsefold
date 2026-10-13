@@ -36,6 +36,8 @@ Accounting distinguishes measured replay capture from analysis. A denominator is
 
 An optional billing model is an offline, vendor-neutral contract mapping. It supports complete captured-input bytes, accepted records and C1 canonical bytes, with an optional indexed fraction and fixed or marginal tiered integer pricing. It also recognises wire bytes and retained byte-days so it can explicitly report that PF-1005 has not measured them. The model never maps canonical bytes to wire bytes. It can report gross observability cost opportunity for a stated scope, but cannot calculate retention, egress, PulseFold operating cost or net customer saving.
 
+PF-1007 presents these existing facts through one terminal or JSON shadow report. It keeps measured input, C1 counterfactual exact repetition, C2 inferred structural repetition, economics and unavailable values separate. A deterministic limitations list is committed with the report, so a renderer cannot silently omit the constraints under which an opportunity was calculated.
+
 ## 3. Longer-term logical architecture
 
 The longer-term design retains explicit boundaries between telemetry transport, telemetry interpretation, deterministic compaction, signal detection, incident state, evidence manifests, investigation and routing. These capabilities are delivered in later phases only after the V0 safety and benchmark gates pass.

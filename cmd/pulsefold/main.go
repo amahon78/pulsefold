@@ -21,13 +21,13 @@ func main() {
 }
 
 func run(arguments []string, stdout, stderr io.Writer) int {
-	if (len(arguments) != 2 && len(arguments) != 4) || arguments[0] != "analyse" || (len(arguments) == 4 && arguments[2] != "--billing") {
-		fmt.Fprintln(stderr, "usage: pulsefold analyse <otlp-json-file> [--billing <billing-json-file>]")
+	billingPath, inputPath, format, ok := parseArguments(arguments, stderr)
+	if !ok {
 		return 2
 	}
 	options := accounting.Options{}
-	if len(arguments) == 4 {
-		billingFile, err := os.Open(arguments[3])
+	if billingPath != "" {
+		billingFile, err := os.Open(billingPath)
 		if err != nil {
 			fmt.Fprintln(stderr, "pulsefold: unable to read billing configuration")
 			return 2
@@ -40,11 +40,18 @@ func run(arguments []string, stdout, stderr io.Writer) int {
 		}
 		options.BillingModel = &model
 	}
-	source := input.FileSource{Path: arguments[1], Info: input.SourceMetadata{
-		Identity: sourceLabel(arguments[1]), Kind: input.SourceOfflineReplay, Format: input.FormatOTLPJSON,
+	source := input.FileSource{Path: inputPath, Info: input.SourceMetadata{
+		Identity: sourceLabel(inputPath), Kind: input.SourceOfflineReplay, Format: input.FormatOTLPJSON,
 	}}
 	outcome := runner.Analyse(context.Background(), source, input.Config{}, c1Config(), c2Config(), options)
-	if err := report.WriteJSON(stdout, outcome.Report); err != nil {
+	var err error
+	switch format {
+	case outputText:
+		err = report.WriteText(stdout, outcome.Report)
+	case outputJSON:
+		err = report.WriteJSON(stdout, outcome.Report)
+	}
+	if err != nil {
 		fmt.Fprintln(stderr, "pulsefold: unable to write report")
 		return 1
 	}
@@ -53,6 +60,67 @@ func run(arguments []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	return 0
+}
+
+type outputFormat string
+
+const (
+	outputText outputFormat = "text"
+	outputJSON outputFormat = "json"
+)
+
+// parsedArguments keeps the small CLI intentionally dependency-free. The
+// billing path is retained only until it is opened and parsed locally.
+type parsedArguments struct {
+	billingPath string
+}
+
+func parseArguments(arguments []string, stderr io.Writer) (string, string, outputFormat, bool) {
+	if len(arguments) == 0 || arguments[0] != "analyse" {
+		writeUsage(stderr)
+		return "", "", "", false
+	}
+	parsed := parsedArguments{}
+	format := outputText
+	inputPath := ""
+	for index := 1; index < len(arguments); index++ {
+		argument := arguments[index]
+		switch argument {
+		case "--billing":
+			if parsed.billingPath != "" || index+1 >= len(arguments) {
+				writeUsage(stderr)
+				return "", "", "", false
+			}
+			index++
+			parsed.billingPath = arguments[index]
+		case "--format":
+			if index+1 >= len(arguments) {
+				writeUsage(stderr)
+				return "", "", "", false
+			}
+			index++
+			format = outputFormat(arguments[index])
+			if format != outputText && format != outputJSON {
+				writeUsage(stderr)
+				return "", "", "", false
+			}
+		default:
+			if inputPath != "" || argument == "" || argument[0] == '-' {
+				writeUsage(stderr)
+				return "", "", "", false
+			}
+			inputPath = argument
+		}
+	}
+	if inputPath == "" {
+		writeUsage(stderr)
+		return "", "", "", false
+	}
+	return parsed.billingPath, inputPath, format, true
+}
+
+func writeUsage(stderr io.Writer) {
+	fmt.Fprintln(stderr, "usage: pulsefold analyse <otlp-json-file> [--billing <billing-json-file>] [--format text|json]")
 }
 
 // fallbackSourceLabel replaces a file name that is not a safe report label.

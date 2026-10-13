@@ -81,6 +81,8 @@ The additive `accounting` object records input, C1 and C2 coverage ratios as exa
 
 The report contains no telemetry body, attribute value, canonical identity, fingerprint, template string, extracted parameter or raw error text. Its C1/C2 statement explicitly describes a counterfactual reduction opportunity, not observed financial saving or a transformation decision.
 
+PF-1007 adds a deterministic top-level `limitations` array. It is derived from status, knownness, exclusions, wire measurement and billing availability. It describes the limits of the individual report, including any incomplete coverage, rather than inventing a combined confidence or reduction number. It is covered by the integrity commitment.
+
 ## 8. Implemented V0 evidence manifest (PF-1006)
 
 Every report, including `input_failed` and `analysis_failed` reports, carries an additive `manifest` object with schema `pulsefold/evidence-manifest/v0alpha1`. It records the manifest, report and analyser versions; opaque source identity and partition references; delivery class (`kind`, `non_authoritative`); the versioned input format; the source-observed analysis interval; completion state and static failure code; coverage knownness; content lifecycle state; fixed lineage; an integrity commitment; and a volatile `created_at`.

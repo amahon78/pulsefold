@@ -12,6 +12,7 @@ V0 analyser:
 - state entries and bytes
 - state overflow and analysis failures
 - report generation latency
+- report integrity verification failures
 
 Future telemetry plane:
 

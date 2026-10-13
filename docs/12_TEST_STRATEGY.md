@@ -23,6 +23,8 @@ PF-1005 adds coverage and economics tests for complete, partial, empty, malforme
 
 PF-1006 tests complete, partial, input-failed and analysis-failed manifests with and without billing, C1 and C2 classifications, all four content lifecycle states, lineage versions, deterministic replay, identifier semantics, integrity detection of report and manifest changes with `created_at` excluded, strict JSON round trip, malformed manifests and lifecycle records, report ownership and aliasing, and source-label privacy for Unix, Windows and relative paths, credential URLs, query strings, tokens, control characters, oversized labels and traversal. Bounded fuzz targets exercise manifest parsing and source-label validation, and benchmarks measure manifest construction and integrity verification.
 
+PF-1007 adds end-to-end text and JSON report tests for complete structural fixtures, malformed input, source-label privacy, billing availability, C1/C2 separation, integrity status and static limitations. It verifies that terminal output remains payload-free and never presents integrity as authentication. A complete report-path benchmark covers replay, redaction, C1, C2, report construction and text rendering.
+
 ### Scenario
 Synthetic end-to-end replay and report flows. Incident flows are post-V0.
 

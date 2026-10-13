@@ -52,6 +52,10 @@ V0 evaluates reduction opportunity, not generic dollar savings. PF-1005 tests co
 
 The implementation can calculate a gross observability cost opportunity only for an operator-supplied generic meter mapping. It does not have retention assumptions, PulseFold operating cost, egress measurements or vendor contract integration, so it cannot calculate net customer saving.
 
+### V0 shadow report
+
+PF-1007 verifies the complete replay-to-report path for complete, zero-input, malformed and bounded-input outcomes. The report must retain C1 and C2 as separate claims, show the relevant coverage denominator, preserve unavailable economics and verify its manifest commitment after JSON round trip. Terminal output is inspected for the same safety distinctions and for absence of fixture secrets or input paths. These are report-correctness checks, not evidence that active compaction is safe or that an estimate will match a production bill.
+
 ## 3. Signal evaluation
 
 Post-V0. V0 does not generate operational signals.

@@ -21,6 +21,7 @@ Exit:
 - redaction before derivation
 - bounded report-only C1 and C2 analysis
 - coverage-aware, versioned reduction report
+- payload-free provenance manifest and integrity verification for every report
 - explicit capture and analysis coverage plus optional scoped billing opportunity accounting
 - fault and performance benchmark baseline
 - no production-forwarding modification, active compaction, incidents, routing or AI

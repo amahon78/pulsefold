@@ -16,18 +16,19 @@ Offline replay identifies its source and optional partition. The same source int
 
 PF-1002 applies redaction policy `v1-fixture-safety` before any canonicalisation or C1 analysis. It replaces values of attributes whose names indicate credentials and replaces strings that match a small, documented fake-fixture policy, including bearer-token and key/value secret shapes. The policy is deterministic and intended to validate the architecture, not to claim universal DLP coverage. Its version appears in successful reports.
 
-PF-1003 currently exposes the local workflow:
+PF-1007 exposes the local workflow. Text is the default terminal summary and JSON is explicit for machine consumption:
 
 ```bash
-go run ./cmd/pulsefold analyse ./telemetry.otlp.json > pulsefold-report.json
+go run ./cmd/pulsefold analyse ./telemetry.otlp.json
+go run ./cmd/pulsefold analyse ./telemetry.otlp.json --format json > pulsefold-report.json
 ```
 
-The command emits JSON for both a complete analysis and a safe, classified input failure. A failure exits non-zero. It never forwards the replayed data or prints raw telemetry in its diagnostics.
+The command emits either format for both a complete analysis and a safe, classified input failure. A failure exits non-zero. It never forwards the replayed data or prints raw telemetry in its diagnostics. The input path is never emitted: its safe base name is used as a source label or the CLI substitutes `offline-replay-file`.
 
 PF-1005 optionally accepts a local, strict JSON billing model:
 
 ```bash
-go run ./cmd/pulsefold analyse ./telemetry.otlp.json --billing ./billing.json > pulsefold-report.json
+go run ./cmd/pulsefold analyse ./telemetry.otlp.json --billing ./billing.json --format json > pulsefold-report.json
 ```
 
 The model uses `pulsefold/billing-model/v1`, one generic metric (`captured_input_bytes`, `accepted_records`, `c1_canonical_bytes`, `wire_bytes` or `retained_byte_days`), an indexed fraction and either a fixed rate or marginal tiers. Prices are integer minor units per integer unit block. `wire_bytes` and `retained_byte_days` are recognised but unavailable in PF-1005 because it does not measure them. The model is validated before analysis and is not a credential, vendor integration or pricing lookup. Omitting it is normal and produces an explicit unavailable billing result.

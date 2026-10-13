@@ -140,13 +140,13 @@ Minimum output:
 - input coverage, capture drops and analysis failures
 - exact duplicate opportunities
 - template aggregation opportunities
-- repeated payload opportunities
-- unique event volume
-- top reducible templates
+- repeated payload opportunities in later phases only
+- unique event volume where an implemented analyser provides it
+- top reducible templates in later phases only
 - counterfactual output and raw-byte reduction opportunity
 - separately measured wire-byte estimate where configuration permits
 - billing estimate only when an operator supplies the billing model and cost inputs
-- CPU/memory used by analysis
+- CPU/memory used by analysis in the benchmark harness
 - confidence/limitations
 
 ## 10. Unknowns requiring Phase 1 benchmark and design validation
@@ -166,3 +166,5 @@ V0 is logs-only and accepts replayed or explicitly best-effort replicated input.
 The current implementation supports C1, bounded report-only C2 and shadow accounting. The report labels C1 canonical-byte figures as `counterfactual` and C2 structural-record figures as `inferred`. Capture coverage is `measured` only when the bounded replay fully reads its input and enumerates records. It does not measure compressed wire bytes, vendor billable units or customer financial savings. C2 output is not an active-compaction policy, a global template identity or evidence content.
 
 An optional operator-supplied billing model may price one explicitly mapped generic quantity using exact integer arithmetic: captured input bytes, accepted records or C1 canonical bytes. It also recognises wire bytes and retained byte-days, but reports them unavailable until those measures exist. Indexed subsets and fixed or marginal tiered prices are supported. Billing output identifies its captured-input or analysed-subset scope and reports gross observability cost opportunity only. Missing models, incomplete denominators, unsupported meters and overflow are unavailable states, not zero estimates. Canonical bytes, wire bytes, billable units and net saving remain distinct quantities.
+
+PF-1007 renders this as a coverage-aware report. It presents C1 as an exact-repetition counterfactual with its analysed denominator and C2 as a separate inferred candidate opportunity. It never combines them into a verified reduction or financial result. The terminal renderer repeats only aggregate counts, coverage, economics and static limitations, never telemetry content.

@@ -183,6 +183,57 @@ func TestAnalyseC2ReportDoesNotContainTemplateOrRawTelemetry(t *testing.T) {
 	}
 }
 
+func TestAnalyseMakesBoundedStageExclusionsVisibleInShadowReport(t *testing.T) {
+	scenario := fixture.GenerateTemplateScenario(fixture.Config{Seed: 72})
+	payload, err := protojson.Marshal(scenario.Request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, config := range map[string]struct {
+		c1Config c1.Config
+		c2Config c2.Config
+		expected string
+	}{
+		"C1 state cap": {c1Config: c1.Config{MaxGroups: 1}, c2Config: zeroC2Config(), expected: "C1 analysis coverage is incomplete"},
+		"C2 state cap": {c1Config: zeroC1Config(), c2Config: c2.Config{MaxClusters: 1}, expected: "C2 analysis coverage is incomplete"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			outcome := Analyse(context.Background(), source(payload), input.Config{}, config.c1Config, config.c2Config, accounting.Options{})
+			if outcome.Err != nil || outcome.Report.C1 == nil || outcome.Report.C2 == nil {
+				t.Fatalf("outcome = %#v", outcome)
+			}
+			var output bytes.Buffer
+			if err := report.WriteText(&output, outcome.Report); err != nil {
+				t.Fatal(err)
+			}
+			if !strings.Contains(output.String(), config.expected) {
+				t.Errorf("bounded exclusion was not visible: %s", output.String())
+			}
+		})
+	}
+}
+
+func BenchmarkAnalyseAndRenderShadowReport(b *testing.B) {
+	scenario := fixture.GenerateTemplateScenario(fixture.Config{Seed: 71, HighCardinalityCount: 32, LargeBodyBytes: 512})
+	payload, err := protojson.Marshal(scenario.Request)
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.ReportAllocs()
+	b.SetBytes(int64(len(payload)))
+	b.ResetTimer()
+	for index := 0; index < b.N; index++ {
+		outcome := Analyse(context.Background(), source(payload), input.Config{}, zeroC1Config(), zeroC2Config(), accounting.Options{})
+		if outcome.Err != nil {
+			b.Fatal(outcome.Err)
+		}
+		var output bytes.Buffer
+		if err := report.WriteText(&output, outcome.Report); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
 func source(payload []byte) input.ReaderSource {
 	return input.ReaderSource{Reader: bytes.NewReader(payload), Info: input.SourceMetadata{Identity: "runner-fixture", Partition: "test", Kind: input.SourceOfflineReplay, Format: input.FormatOTLPJSON}}
 }

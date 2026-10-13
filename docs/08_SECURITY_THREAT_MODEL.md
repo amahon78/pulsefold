@@ -112,6 +112,17 @@ Mitigation:
 - no active compaction in V0
 - retain provenance manifests with analyser and policy versions
 
+### Unsafe report interpretation
+
+An operator or downstream tool could mistake a partial, inferred or unauthenticated result for verified production saving.
+
+Mitigation:
+- the V0 report separates measured input, C1 counterfactual exact repetition and C2 inferred structural candidates
+- every opportunity is shown with its analysed denominator or as unknown
+- unavailable wire and billing quantities are not replaced with zero or estimates
+- static limitations are covered by the report integrity commitment
+- the SHA-256 consistency check is labelled as unauthenticated and no evidence content is claimed to exist
+
 ### False RCA
 
 Model confidently attributes an incident to the wrong cause.
