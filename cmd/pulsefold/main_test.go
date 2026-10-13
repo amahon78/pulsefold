@@ -97,3 +97,38 @@ func TestRunMalformedInputReturnsSafeJSONFailure(t *testing.T) {
 		t.Error("CLI did not emit a machine-readable malformed-input report")
 	}
 }
+
+func TestRunNeverEchoesInputPathsInReport(t *testing.T) {
+	scenario := fixture.Generate(fixture.Config{Seed: 3, HighCardinalityCount: 0, LargeBodyBytes: 0})
+	payload, err := protojson.Marshal(scenario.Request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	directory := filepath.Join(t.TempDir(), "Users", "alex", "example")
+	if err := os.MkdirAll(directory, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"file.json", "my logs.json", "ghp_0123456789abcdef.json", "file.json?token=abc", `C:\Users\example\file.json`} {
+		path := filepath.Join(directory, name)
+		if err := os.WriteFile(path, payload, 0o600); err != nil {
+			t.Fatal(err)
+		}
+		var stdout, stderr bytes.Buffer
+		if exitCode := run([]string{"analyse", path}, &stdout, &stderr); exitCode != 0 {
+			t.Fatalf("%q: exit code = %d", name, exitCode)
+		}
+		output := stdout.String() + stderr.String()
+		for _, forbidden := range []string{directory, "/Users/", "alex", "ghp_", "token=abc", `C:\`, "my logs"} {
+			if strings.Contains(output, forbidden) {
+				t.Errorf("%q: report leaked %q", name, forbidden)
+			}
+		}
+		wantLabel := `"identity": "file.json"`
+		if name != "file.json" {
+			wantLabel = `"identity": "` + fallbackSourceLabel + `"`
+		}
+		if !strings.Contains(stdout.String(), wantLabel) || !strings.Contains(stdout.String(), `"manifest_id": "pfm_v0_`) {
+			t.Errorf("%q: unexpected source label or missing manifest", name)
+		}
+	}
+}

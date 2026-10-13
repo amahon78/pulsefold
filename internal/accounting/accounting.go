@@ -38,7 +38,12 @@ const (
 	MetricRetainedByteDays Metric = "retained_byte_days"
 )
 
-const BillingSchemaVersion = "pulsefold/billing-model/v1"
+const (
+	BillingSchemaVersion = "pulsefold/billing-model/v1"
+	// PolicyVersion identifies the bounded, local accounting semantics that
+	// produced a report. It is provenance, not a billing-provider version.
+	PolicyVersion = "accounting-v1"
+)
 
 // Ratio is unavailable rather than zero when no complete, non-zero
 // denominator exists. It intentionally contains no floating-point percentage.
@@ -164,14 +169,16 @@ type Opportunity struct {
 // Billing is either an operator-supplied, validated calculation or an
 // explicit unavailable result. It does not report credentials or telemetry.
 type Billing struct {
-	ModelSupplied  bool           `json:"model_supplied"`
-	Classification Classification `json:"classification"`
-	Available      bool           `json:"available"`
-	Reason         string         `json:"reason,omitempty"`
-	Metric         Metric         `json:"metric,omitempty"`
-	Baseline       *Estimate      `json:"baseline,omitempty"`
-	C1             *Opportunity   `json:"c1,omitempty"`
-	C2             *Opportunity   `json:"c2,omitempty"`
+	ModelSupplied      bool           `json:"model_supplied"`
+	Classification     Classification `json:"classification"`
+	Available          bool           `json:"available"`
+	Reason             string         `json:"reason,omitempty"`
+	Metric             Metric         `json:"metric,omitempty"`
+	ModelSchemaVersion string         `json:"model_schema_version,omitempty"`
+	ModelCommitment    string         `json:"model_commitment,omitempty"`
+	Baseline           *Estimate      `json:"baseline,omitempty"`
+	C1                 *Opportunity   `json:"c1,omitempty"`
+	C2                 *Opportunity   `json:"c2,omitempty"`
 }
 
 // Result contains only counts, classifications and optional exact money.
@@ -245,7 +252,7 @@ func calculateBilling(replay input.ReplayResult, c1Result c1.Result, c2Result c2
 	if err := model.Validate(); err != nil {
 		return Billing{ModelSupplied: true, Classification: UserSupplied, Available: false, Reason: "billing_model_invalid"}
 	}
-	billing := Billing{ModelSupplied: true, Classification: UserSupplied, Available: true, Metric: model.Metric}
+	billing := Billing{ModelSupplied: true, Classification: UserSupplied, Available: true, Metric: model.Metric, ModelSchemaVersion: model.SchemaVersion, ModelCommitment: modelCommitment(*model)}
 	switch model.Metric {
 	case MetricCapturedInputBytes:
 		if !replay.Coverage.InputBytesKnown {

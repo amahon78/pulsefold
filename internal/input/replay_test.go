@@ -127,6 +127,20 @@ func TestReplayRejectsUnsupportedSourceContracts(t *testing.T) {
 	}
 }
 
+func TestReplayRejectsUnsafeSourceLabelsWithoutEchoingThem(t *testing.T) {
+	unsafe := "/Users/example/private/pf_fake_secret"
+	result, err := Replay(context.Background(), ReaderSource{
+		Reader: strings.NewReader(`{}`),
+		Info:   SourceMetadata{Identity: unsafe, Partition: "orders/private", Kind: SourceOfflineReplay, Format: FormatOTLPJSON},
+	}, Config{})
+	if !errors.Is(err, ErrUnsupportedInput) || result.Coverage.UnsupportedInput != 1 {
+		t.Fatalf("unsafe source result = %#v, %v", result, err)
+	}
+	if result.Source.Identity != "invalid_source" || result.Source.Partition != "" || strings.Contains(result.Source.Identity, "private") {
+		t.Errorf("unsafe source metadata was retained: %#v", result.Source)
+	}
+}
+
 func TestReplayCoverageIsDeterministic(t *testing.T) {
 	request := &collectlogsv1.ExportLogsServiceRequest{ResourceLogs: []*logsv1.ResourceLogs{
 		resourceLogs("payments", []*logsv1.LogRecord{logRecord(20, stringValue("same")), logRecord(10, stringValue("same"))}),
@@ -219,4 +233,50 @@ func mapValue(key string, value *commonv1.AnyValue) *commonv1.AnyValue {
 
 func arrayValue(values ...*commonv1.AnyValue) *commonv1.AnyValue {
 	return &commonv1.AnyValue{Value: &commonv1.AnyValue_ArrayValue{ArrayValue: &commonv1.ArrayValue{Values: values}}}
+}
+
+func TestSafeSourceLabelRejectsPathsCredentialsAndControlCharacters(t *testing.T) {
+	for _, unsafe := range []string{
+		"/Users/alex/example/file.json", "/home/example/file.json", `C:\Users\example\file.json`, "relative/path/file.json",
+		"../file.json", "..", ".", ".hidden", "file..json", "-flag",
+		"https://user:pass@example.invalid/x.json", "user:pass@host", "file.json?token=abc", "file.json#frag",
+		"ghp_0123456789abcdef", "github_pat_11AA", "xoxb-123", "AKIA0123456789ABCDEF", "my-api_key-file", "Bearer-abc", "pf_fake_secret_file",
+		"file\x00.json", "file\n.json", "file\x1b[31m.json", "file .json", "fi\u00e9le.json",
+		strings.Repeat("a", MaxSourceLabelBytes+1), "",
+	} {
+		if SafeSourceLabel(unsafe) {
+			t.Errorf("unsafe label accepted: %q", unsafe)
+		}
+		result, err := Replay(context.Background(), ReaderSource{Reader: strings.NewReader(`{}`), Info: SourceMetadata{Identity: unsafe, Kind: SourceOfflineReplay, Format: FormatOTLPJSON}}, Config{})
+		if err == nil || result.Source.Identity != "invalid_source" {
+			t.Errorf("unsafe label replay = %#v, %v", result.Source, err)
+		}
+		if err != nil && unsafe != "" && strings.Contains(err.Error(), unsafe) {
+			t.Errorf("error echoed unsafe label %q", unsafe)
+		}
+	}
+	for _, safe := range []string{"file.json", "fixture.otlp.json", "payments-prod_2026-10-13.json", strings.Repeat("a", MaxSourceLabelBytes)} {
+		if !SafeSourceLabel(safe) {
+			t.Errorf("safe label rejected: %q", safe)
+		}
+	}
+}
+
+func FuzzSafeSourceLabel(f *testing.F) {
+	for _, seed := range []string{"file.json", "/Users/alex/example/file.json", `C:\x`, "a..b", "ghp_x"} {
+		f.Add(seed)
+	}
+	f.Fuzz(func(t *testing.T, value string) {
+		if !SafeSourceLabel(value) {
+			return
+		}
+		if len(value) == 0 || len(value) > MaxSourceLabelBytes || strings.ContainsAny(value, "/\\:@?#%&= \t\r\n\x00") || strings.Contains(value, "..") {
+			t.Fatalf("unsafe label accepted: %q", value)
+		}
+		for index := 0; index < len(value); index++ {
+			if value[index] < 0x21 || value[index] > 0x7e {
+				t.Fatalf("non-printable label accepted: %q", value)
+			}
+		}
+	})
 }

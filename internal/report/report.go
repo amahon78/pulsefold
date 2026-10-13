@@ -3,6 +3,7 @@ package report
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/amahon78/pulsefold/internal/c1"
 	"github.com/amahon78/pulsefold/internal/c2"
 	"github.com/amahon78/pulsefold/internal/input"
+	"github.com/amahon78/pulsefold/internal/provenance"
 )
 
 const SchemaVersion = "pulsefold/v0alpha1"
@@ -23,20 +25,22 @@ const (
 )
 
 // Report is intentionally evidence-oriented metadata, not a telemetry export.
-// It contains no record body, attribute value, canonical identity or hash.
+// It contains no record body, attribute value or canonical identity. Its only
+// hashes are manifest commitments over metadata and aggregate report content.
 type Report struct {
-	SchemaVersion          string            `json:"schema_version"`
-	AnalyserVersion        string            `json:"analyser_version"`
-	Status                 Status            `json:"status"`
-	CounterfactualNotice   string            `json:"counterfactual_notice"`
-	RedactionPolicyVersion string            `json:"redaction_policy_version,omitempty"`
-	Source                 Source            `json:"source"`
-	AnalysisInterval       AnalysisInterval  `json:"analysis_interval"`
-	Coverage               Coverage          `json:"coverage"`
-	Accounting             accounting.Result `json:"accounting"`
-	C1                     *C1               `json:"c1,omitempty"`
-	C2                     *C2               `json:"c2,omitempty"`
-	Failure                *Failure          `json:"failure,omitempty"`
+	SchemaVersion          string               `json:"schema_version"`
+	AnalyserVersion        string               `json:"analyser_version"`
+	Status                 Status               `json:"status"`
+	CounterfactualNotice   string               `json:"counterfactual_notice"`
+	RedactionPolicyVersion string               `json:"redaction_policy_version,omitempty"`
+	Source                 Source               `json:"source"`
+	AnalysisInterval       AnalysisInterval     `json:"analysis_interval"`
+	Coverage               Coverage             `json:"coverage"`
+	Accounting             accounting.Result    `json:"accounting"`
+	Manifest               *provenance.Manifest `json:"manifest,omitempty"`
+	C1                     *C1                  `json:"c1,omitempty"`
+	C2                     *C2                  `json:"c2,omitempty"`
+	Failure                *Failure             `json:"failure,omitempty"`
 }
 
 type Source struct {
@@ -174,6 +178,7 @@ func Complete(replay input.ReplayResult, policyVersion, analyserVersion string, 
 			"Correctness and cross-instance agreement require independently labelled evaluation data.",
 		},
 	}
+	attachManifest(&report, replay, policyVersion, &result, &c2Result)
 	return report
 }
 
@@ -181,6 +186,7 @@ func InputFailure(replay input.ReplayResult, analyserVersion, code string) Repor
 	report := base(replay, analyserVersion)
 	report.Status = StatusInputFailed
 	report.Failure = &Failure{Stage: "input", Code: code}
+	attachManifest(&report, replay, "", nil, nil)
 	return report
 }
 
@@ -189,6 +195,7 @@ func AnalysisFailure(replay input.ReplayResult, policyVersion, analyserVersion, 
 	report.Status = StatusAnalysisFailed
 	report.RedactionPolicyVersion = policyVersion
 	report.Failure = &Failure{Stage: "analysis", Code: code}
+	attachManifest(&report, replay, policyVersion, nil, nil)
 	return report
 }
 
@@ -228,4 +235,75 @@ func coverage(value input.Coverage) Coverage {
 		CaptureErrors: value.CaptureErrors, InputBytesRead: value.InputBytesRead, InputBytesKnown: value.InputBytesKnown,
 		InputByteLimitHit: value.InputByteLimitHit,
 	}
+}
+
+// now is the volatile manifest generation clock. It is excluded from the
+// integrity commitment and replaced only by tests.
+var now = time.Now
+
+// ErrIntegrityMismatch reports that a report and its manifest commitment do
+// not agree. It is integrity checking, not authentication: anyone able to
+// modify a report can recompute the commitment.
+var ErrIntegrityMismatch = errors.New("report integrity commitment does not match")
+
+// commitmentPayload is the pulsefold/report-content-json-v1 canonical form:
+// compact encoding/json output of this schema version's typed structs, with
+// fields in declaration order, no maps, UTC RFC 3339 times and the report's
+// manifest replaced by its CommitmentView.
+type commitmentPayload struct {
+	Canonicalisation string              `json:"canonicalisation"`
+	Report           Report              `json:"report"`
+	Manifest         provenance.Manifest `json:"manifest"`
+}
+
+// IntegrityCommitment produces the deterministic V0 report checksum. It
+// covers all report content and the deterministic manifest fields. The
+// manifest integrity, content-derived ID and creation time are excluded to
+// avoid self-reference and wall-clock dependence. value is not modified.
+func IntegrityCommitment(value Report) (provenance.Integrity, error) {
+	payload := commitmentPayload{Canonicalisation: provenance.IntegrityCanonicalisation, Report: value}
+	payload.Report.Manifest = nil
+	if value.Manifest != nil {
+		payload.Manifest = value.Manifest.CommitmentView()
+	}
+	encoded, err := json.Marshal(payload)
+	if err != nil {
+		return provenance.Integrity{}, err
+	}
+	return provenance.Commitment(encoded), nil
+}
+
+// VerifyIntegrity recomputes the commitment and checks the manifest ID. It
+// detects accidental or uncoordinated changes only; it does not prove who
+// produced the report.
+func VerifyIntegrity(value Report) error {
+	if value.Manifest == nil {
+		return ErrIntegrityMismatch
+	}
+	integrity, err := IntegrityCommitment(value)
+	if err != nil || integrity != value.Manifest.Integrity {
+		return ErrIntegrityMismatch
+	}
+	if err := value.Manifest.Validate(); err != nil {
+		return ErrIntegrityMismatch
+	}
+	return nil
+}
+
+func attachManifest(report *Report, replay input.ReplayResult, policyVersion string, c1Result *c1.Result, c2Result *c2.Result) {
+	completion := provenance.Completion{State: string(report.Status)}
+	if report.Failure != nil {
+		completion.FailureCode = report.Failure.Code
+	}
+	manifest := provenance.Build(replay, SchemaVersion, report.AnalyserVersion, policyVersion, completion, c1Result, c2Result, report.Accounting)
+	report.Manifest = &manifest
+	integrity, err := IntegrityCommitment(*report)
+	if err != nil {
+		// Report contains only typed JSON values, so this is unreachable for
+		// this schema. Do not emit a manifest that claims a commitment.
+		report.Manifest = nil
+		return
+	}
+	provenance.AttachIntegrity(&manifest, integrity)
+	manifest.CreatedAt = now().UTC()
 }

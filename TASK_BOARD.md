@@ -90,7 +90,10 @@ Record accepted input, capture drops, malformed records, state overflow, raw can
 **Delivered:** explicit captured-byte and observed-record denominator knownness, measured input and per-stage coverage, counterfactual C1 and inferred C2 classifications, explicit unknown wire measurement and optional strict generic billing models. Billing maps only complete captured bytes, accepted records or C1 canonical bytes using exact fixed or tiered minor-unit arithmetic. It reports scoped gross observability cost opportunity, never generic customer or net savings.
 
 ### PF-1006: Evidence manifest and report provenance model
+**Status:** Complete (2026-10-13).
 Implement only the manifest and report provenance needed by V0. Defer evidence content storage and archival.
+
+**Delivered:** a payload-free evidence manifest on every complete and failure report, with versions, opaque source references, delivery class, analysis interval, completion and coverage state, fixed capture-to-report lineage reusing PF-1005 classifications, `not_stored` content state, a separate lifecycle record type and an unauthenticated, non-self-referential SHA-256 integrity commitment. Source labels are validated and never echo paths or credential-shaped values. There is no content store, signing or attestation.
 
 ### PF-1007: Coverage-aware shadow reduction report
 Produce a reproducible versioned report with C1/C2 opportunities, safety exclusions and no generic dollar-saving claim.

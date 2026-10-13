@@ -138,7 +138,7 @@ transformation_reference
 sensitivity_class
 ```
 
-V0 emits report provenance only. Content storage is not a V0 component.
+V0 emits report provenance only: a payload-free manifest with fixed lineage, `not_stored` content state and an unauthenticated SHA-256 integrity commitment (see `docs/10_DATA_MODEL.md` section 8). Content storage is not a V0 component.
 
 ## 8. Signal engine
 

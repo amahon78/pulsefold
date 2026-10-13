@@ -80,3 +80,38 @@ The initial JSON report has schema version `pulsefold/v0alpha1`. PF-1005 adds fi
 The additive `accounting` object records input, C1 and C2 coverage ratios as exact numerator and denominator pairs, never floating-point percentages. It records `unknown` wire bytes unless an adapter supplies a concrete measurement. Its optional billing object records a `user_supplied` generic meter model, baseline units and any C1/C2 gross observability cost opportunity in integer currency minor units. An unavailable billing object provides a stable reason rather than a zero value. A C2 coverage exclusion is counted in C1 representatives, while the C2 analysis object retains weighted record exclusions.
 
 The report contains no telemetry body, attribute value, canonical identity, fingerprint, template string, extracted parameter or raw error text. Its C1/C2 statement explicitly describes a counterfactual reduction opportunity, not observed financial saving or a transformation decision.
+
+## 8. Implemented V0 evidence manifest (PF-1006)
+
+Every report, including `input_failed` and `analysis_failed` reports, carries an additive `manifest` object with schema `pulsefold/evidence-manifest/v0alpha1`. It records the manifest, report and analyser versions; opaque source identity and partition references; delivery class (`kind`, `non_authoritative`); the versioned input format; the source-observed analysis interval; completion state and static failure code; coverage knownness; content lifecycle state; fixed lineage; an integrity commitment; and a volatile `created_at`.
+
+Lineage is the fixed V0 pipeline `capture -> redaction -> c1 -> c2 -> accounting -> report`, not a generic graph. Stage entries record the redaction-policy version, C1 canonicalisation and candidate-policy versions, C2 algorithm, candidate-policy and partition-policy versions and bounds, the accounting policy version and the billing-model schema version and commitment when an operator supplies a model. Stage origins are `system_generated`, `operator_supplied`, `telemetry_derived` or `unknown`. Stage classifications reuse the PF-1005 classes (`measured`, `counterfactual`, `inferred`, `user_supplied`, `unknown`); there is no separate classification model. A stage that did not run carries no versions or classification.
+
+The manifest contains no telemetry body, attribute value, canonical identity, template text, secret, content locator or local filesystem path.
+
+### Identifiers
+
+| Field | Stable across replay | Unique per run | Globally unique | Opaque | Content-derived |
+| --- | --- | --- | --- | --- | --- |
+| `source.identity_reference`, `source.partition_reference` | yes | no | no | yes | yes: SHA-256 of a namespaced operator label |
+| `manifest_id` (`pfm_v0_<hex>`) | yes | no | no | yes | yes: derived from the integrity commitment |
+| `lineage.*.reference` | yes | no | no, scoped to one manifest | no | no: fixed stage names |
+| `billing_model_commitment` | yes | no | no | yes | yes: SHA-256 of the validated model |
+
+Source references are opaque but are not confidential: a low-entropy label can be confirmed by guessing. They are derived only from already-validated operator labels, never from telemetry. Two identical replays produce the same `manifest_id`; it identifies report content, not a run. V0 has no per-run identifier.
+
+### Integrity
+
+`integrity` uses SHA-256 with canonicalisation `pulsefold/report-content-json-v1`: the compact `encoding/json` encoding of this schema version's typed structs (declaration field order, no maps, UTC RFC 3339 times) of the report with its manifest replaced by a view that clears `integrity`, `manifest_id` and `created_at`. The commitment is therefore not self-referential and excludes wall-clock time. It covers aggregate report content only, which is already post-redaction; it is not a commitment to raw telemetry and two inputs with identical aggregate results share a commitment. `authenticated` is always `false`: anyone able to change a report can recompute the commitment. V0 has no signing, PKI, key management or attestation.
+
+### Deterministic and volatile fields
+
+Every report and manifest field is deterministic for identical input, configuration and analyser version except `manifest.created_at`. PulseFold does not claim byte-for-byte reproducibility across analyser, Go or dependency versions.
+
+### Content lifecycle
+
+V0 stores no evidence content and always emits `content.state: not_stored`. The lifecycle record type supports `not_stored`, `available`, `expired` and `erased` with a time, a short machine reason code for `expired` and `erased`, and an opaque reference only for `available`. Lifecycle records are separate from the immutable manifest and do not change its commitment. Only `available` with a reference is reported as retrievable, and V0 has no backing store to resolve one.
+
+### Source labels
+
+Source identity and partition labels are limited to 128 ASCII letters, digits, `.`, `_` and `-`. Paths, URLs, query strings, whitespace, control characters, traversal-shaped labels and common credential-shaped labels are refused without being echoed. The CLI uses the input file base name when it is a safe label and `offline-replay-file` otherwise.

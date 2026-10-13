@@ -29,6 +29,17 @@ func TestAnalyseProducesPayloadFreeDeterministicReport(t *testing.T) {
 	if second.Err != nil {
 		t.Fatal(second.Err)
 	}
+	// created_at is the only volatile field. Everything else, including the
+	// content-derived manifest ID and integrity commitment, is deterministic.
+	if first.Report.Manifest == nil || second.Report.Manifest == nil || first.Report.Manifest.CreatedAt.IsZero() {
+		t.Fatal("report manifest is missing or lacks a creation time")
+	}
+	if first.Report.Manifest.ManifestID != second.Report.Manifest.ManifestID || first.Report.Manifest.Integrity != second.Report.Manifest.Integrity {
+		t.Error("identical replay produced a different manifest identity or commitment")
+	}
+	normalised := *second.Report.Manifest
+	normalised.CreatedAt = first.Report.Manifest.CreatedAt
+	second.Report.Manifest = &normalised
 	var firstJSON, secondJSON bytes.Buffer
 	if err := report.WriteJSON(&firstJSON, first.Report); err != nil {
 		t.Fatal(err)
@@ -40,8 +51,10 @@ func TestAnalyseProducesPayloadFreeDeterministicReport(t *testing.T) {
 		t.Error("identical replay produced nondeterministic JSON")
 	}
 	encoded := firstJSON.String()
-	if strings.Contains(encoded, "pf_fake_secret_") || strings.Contains(encoded, "Bearer ") {
-		t.Error("report leaked a fixture secret")
+	for _, forbidden := range []string{"pf_fake_secret_", "Bearer ", "/Users/", "github_pat_", "ghp_"} {
+		if strings.Contains(encoded, forbidden) {
+			t.Errorf("report leaked forbidden material %q", forbidden)
+		}
 	}
 	if !strings.Contains(encoded, "counterfactual reduction opportunity") || !strings.Contains(encoded, "\"status\": \"complete\"") {
 		t.Errorf("report lacks required V0 semantics: %s", encoded)
@@ -54,6 +67,50 @@ func TestAnalyseProducesPayloadFreeDeterministicReport(t *testing.T) {
 	}
 	if first.Report.Accounting.Wire.Known || first.Report.Accounting.Billing.Available || first.Report.Accounting.Billing.Reason != "billing_model_not_supplied" {
 		t.Errorf("default accounting semantics = %#v", first.Report.Accounting)
+	}
+	if first.Report.Manifest.Completion.State != string(report.StatusComplete) || report.VerifyIntegrity(first.Report) != nil {
+		t.Errorf("report manifest = %#v", first.Report.Manifest)
+	}
+	// Report is a value with pointer fields, so a plain copy aliases C1. The
+	// copy below is explicit so the original report is not mutated.
+	modified := first.Report
+	modifiedC1 := *first.Report.C1
+	modified.C1 = &modifiedC1
+	modified.C1.RawByteOpportunity++
+	if report.VerifyIntegrity(modified) == nil || report.VerifyIntegrity(first.Report) != nil {
+		t.Error("integrity did not detect a content change, or the original was mutated")
+	}
+}
+
+func TestAnalyseManifestCarriesBillingProvenance(t *testing.T) {
+	scenario := fixture.Generate(fixture.Config{Seed: 15, HighCardinalityCount: 0, LargeBodyBytes: 0})
+	payload, err := protojson.Marshal(scenario.Request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	model := &accounting.Model{SchemaVersion: accounting.BillingSchemaVersion, Currency: "TST", Metric: accounting.MetricAcceptedRecords, IndexedFraction: accounting.Fraction{Numerator: 1, Denominator: 1}, Pricing: accounting.Pricing{Fixed: &accounting.Rate{UnitBlock: 1, MinorUnitsPerBlock: 1}}}
+	outcome := Analyse(context.Background(), source(payload), input.Config{}, zeroC1Config(), zeroC2Config(), accounting.Options{BillingModel: model})
+	if outcome.Err != nil || outcome.Report.Manifest == nil {
+		t.Fatalf("billing provenance outcome = %#v", outcome)
+	}
+	stage := outcome.Report.Manifest.Lineage.Accounting
+	if stage.BillingOrigin != "operator_supplied" || stage.BillingClassification != accounting.UserSupplied || stage.BillingModelSchema != accounting.BillingSchemaVersion || stage.BillingModelCommitment == "" {
+		t.Errorf("billing manifest lineage = %#v", stage)
+	}
+}
+
+func TestUnsafeSourceLabelDoesNotLeakIntoFailureReportOrManifest(t *testing.T) {
+	unsafe := "/Users/example/private/pf_fake_secret_source"
+	outcome := Analyse(context.Background(), input.ReaderSource{Reader: strings.NewReader(`{}`), Info: input.SourceMetadata{Identity: unsafe, Kind: input.SourceOfflineReplay, Format: input.FormatOTLPJSON}}, input.Config{}, zeroC1Config(), zeroC2Config(), accounting.Options{})
+	if outcome.Err == nil || outcome.Report.Manifest == nil {
+		t.Fatalf("unsafe source outcome = %#v", outcome)
+	}
+	var output bytes.Buffer
+	if err := report.WriteJSON(&output, outcome.Report); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(output.String(), unsafe) || strings.Contains(output.String(), "pf_fake_secret_source") {
+		t.Errorf("unsafe source leaked into report: %s", output.String())
 	}
 }
 
@@ -76,6 +133,9 @@ func TestAnalyseReturnsSafeFailureReportForMalformedInput(t *testing.T) {
 	if outcome.Report.Accounting.Coverage.C1.Coverage.Known || outcome.Report.Accounting.Coverage.Input.RecordsObservedKnown {
 		t.Errorf("input failure accounting claimed unavailable analysis: %#v", outcome.Report.Accounting)
 	}
+	if outcome.Report.Manifest == nil || outcome.Report.Manifest.Completion.State != string(report.StatusInputFailed) || outcome.Report.Manifest.Completion.FailureCode != "malformed_input" {
+		t.Errorf("input failure manifest = %#v", outcome.Report.Manifest)
+	}
 }
 
 func TestAnalyseFailureMarksAnalysisCoverageUnavailable(t *testing.T) {
@@ -95,6 +155,9 @@ func TestAnalyseFailureMarksAnalysisCoverageUnavailable(t *testing.T) {
 	}
 	if outcome.Report.Accounting.Coverage.C1.Coverage.Known || outcome.Report.Accounting.Coverage.C2.Coverage.Known || outcome.Report.Accounting.Coverage.C1.Coverage.Reason != "c1_not_completed" {
 		t.Errorf("analysis failure coverage = %#v", outcome.Report.Accounting.Coverage)
+	}
+	if outcome.Report.Manifest == nil || outcome.Report.Manifest.Completion.State != string(report.StatusAnalysisFailed) || outcome.Report.Manifest.Completion.FailureCode != "cancelled" {
+		t.Errorf("analysis failure manifest = %#v", outcome.Report.Manifest)
 	}
 }
 

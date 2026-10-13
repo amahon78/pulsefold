@@ -41,7 +41,7 @@ func run(arguments []string, stdout, stderr io.Writer) int {
 		options.BillingModel = &model
 	}
 	source := input.FileSource{Path: arguments[1], Info: input.SourceMetadata{
-		Identity: filepath.Base(arguments[1]), Kind: input.SourceOfflineReplay, Format: input.FormatOTLPJSON,
+		Identity: sourceLabel(arguments[1]), Kind: input.SourceOfflineReplay, Format: input.FormatOTLPJSON,
 	}}
 	outcome := runner.Analyse(context.Background(), source, input.Config{}, c1Config(), c2Config(), options)
 	if err := report.WriteJSON(stdout, outcome.Report); err != nil {
@@ -53,6 +53,19 @@ func run(arguments []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	return 0
+}
+
+// fallbackSourceLabel replaces a file name that is not a safe report label.
+// The CLI never echoes a directory, and an unsafe base name such as one with
+// whitespace, credentials or a Windows path does not fail the analysis.
+const fallbackSourceLabel = "offline-replay-file"
+
+func sourceLabel(path string) string {
+	label := filepath.Base(path)
+	if !input.SafeSourceLabel(label) {
+		return fallbackSourceLabel
+	}
+	return label
 }
 
 func c1Config() c1.Config {

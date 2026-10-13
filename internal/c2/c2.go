@@ -22,6 +22,7 @@ import (
 const (
 	AlgorithmVersion          = "c2-conservative-drain-style-v1"
 	CandidatePolicyVersion    = "c2-report-only-no-parameters-v1"
+	PartitionPolicyVersion    = "c2-redacted-resource-scope-severity-v1"
 	DefaultMaxClusters        = 10_000
 	DefaultMaxPartitions      = 10_000
 	DefaultMaxStateBytes      = 16 << 20

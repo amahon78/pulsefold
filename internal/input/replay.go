@@ -12,6 +12,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	collectlogsv1 "go.opentelemetry.io/proto/otlp/collector/logs/v1"
@@ -182,6 +183,7 @@ func Replay(ctx context.Context, source Source, config Config) (ReplayResult, er
 
 	result := ReplayResult{Source: source.Metadata()}
 	if err := validateSource(result.Source); err != nil {
+		result.Source = safeSourceMetadata(result.Source)
 		if errors.Is(err, ErrUnsupportedInput) {
 			result.Coverage.UnsupportedInput++
 		}
@@ -273,8 +275,11 @@ func Replay(ctx context.Context, source Source, config Config) (ReplayResult, er
 }
 
 func validateSource(source SourceMetadata) error {
-	if source.Identity == "" {
-		return fmt.Errorf("%w: source identity is required", ErrUnsupportedInput)
+	if !safeSourceLabel(source.Identity) {
+		return fmt.Errorf("%w: source identity is invalid", ErrUnsupportedInput)
+	}
+	if source.Partition != "" && !safeSourceLabel(source.Partition) {
+		return fmt.Errorf("%w: source partition is invalid", ErrUnsupportedInput)
 	}
 	if source.Format != FormatOTLPJSON {
 		return fmt.Errorf("%w: format %q", ErrUnsupportedInput, source.Format)
@@ -291,6 +296,61 @@ func validateSource(source SourceMetadata) error {
 		return fmt.Errorf("%w: source kind %q", ErrUnsupportedInput, source.Kind)
 	}
 }
+
+func safeSourceMetadata(value SourceMetadata) SourceMetadata {
+	if !safeSourceLabel(value.Identity) {
+		value.Identity = "invalid_source"
+	}
+	if value.Partition != "" && !safeSourceLabel(value.Partition) {
+		value.Partition = ""
+	}
+	if value.Format != FormatOTLPJSON {
+		value.Format = "unsupported"
+	}
+	return value
+}
+
+// MaxSourceLabelBytes bounds operator-supplied source labels. Labels are
+// report provenance, not a free-form diagnostic channel.
+const MaxSourceLabelBytes = 128
+
+// SafeSourceLabel reports whether value is a small operator label that may be
+// echoed in a report. It is deliberately conservative: only ASCII letters,
+// digits, '.', '_' and '-' are accepted, so absolute or relative paths,
+// Windows paths, URLs, credentials in URLs, query strings, whitespace and
+// control characters are refused. Traversal-shaped labels and common
+// credential-shaped labels are refused too. It is a guard, not a secret
+// scanner: operators must still choose non-sensitive labels.
+func SafeSourceLabel(value string) bool {
+	if value == "" || len(value) > MaxSourceLabelBytes || strings.Contains(value, "..") || value[0] == '.' || value[0] == '-' {
+		return false
+	}
+	for index := 0; index < len(value); index++ {
+		character := value[index]
+		if (character >= 'a' && character <= 'z') || (character >= 'A' && character <= 'Z') || (character >= '0' && character <= '9') {
+			continue
+		}
+		switch character {
+		case '.', '_', '-':
+			continue
+		}
+		return false
+	}
+	if strings.HasPrefix(value, "AKIA") {
+		return false
+	}
+	lower := strings.ToLower(value)
+	for _, marker := range credentialMarkers {
+		if strings.Contains(lower, marker) {
+			return false
+		}
+	}
+	return true
+}
+
+var credentialMarkers = []string{"token", "secret", "password", "passwd", "bearer", "apikey", "api_key", "api-key", "credential", "ghp_", "gho_", "ghs_", "github_pat", "xoxb-", "xoxp-"}
+
+func safeSourceLabel(value string) bool { return SafeSourceLabel(value) }
 
 func readBounded(ctx context.Context, reader io.Reader, maximum int64) ([]byte, uint64, error) {
 	var output bytes.Buffer
