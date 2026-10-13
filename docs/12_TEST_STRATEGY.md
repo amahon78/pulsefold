@@ -17,6 +17,8 @@ PF-1002 adds seeded synthetic fixtures with independent C1 grouping truth, fake 
 
 PF-1003 tests C1 ordinary and absent duplicates, resource and severity boundaries, reordered structured values, string versus numeric distinction, forced hash-bucket collisions, entry and byte caps, oversized identities, high-cardinality inputs, cancellation and input immutability. Bounded fuzz targets exercise the OTLP/JSON boundary and C1 canonicalisation. Benchmarks cover repeated, unique, high-cardinality and large-body inputs.
 
+PF-1004 adds independently labelled structural-template cases for variable user and request identifiers, UUIDs, timestamps, IPs, URLs, stack locations, JSON-like bodies, fake secrets, drift, service and severity boundaries, error codes and structured bodies. C2 tests verify redaction-only input, explicit structured and oversized exclusions, global cluster, partition and byte caps, cancellation, deterministic order behaviour, two- and four-partition conservative accounting, source-template accounting and bounded fuzzing. C2 benchmarks cover combined C1/C2 ordinary and high-cardinality paths.
+
 ### Scenario
 Synthetic end-to-end replay and report flows. Incident flows are post-V0.
 

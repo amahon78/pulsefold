@@ -1,4 +1,4 @@
-// Package runner wires the fixed V0 input, redaction and report-only C1 path.
+// Package runner wires the fixed V0 input, redaction and report-only C1/C2 path.
 package runner
 
 import (
@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/amahon78/pulsefold/internal/c1"
+	"github.com/amahon78/pulsefold/internal/c2"
 	"github.com/amahon78/pulsefold/internal/input"
 	"github.com/amahon78/pulsefold/internal/redaction"
 	"github.com/amahon78/pulsefold/internal/report"
@@ -20,7 +21,7 @@ type Outcome struct {
 	Err    error
 }
 
-func Analyse(ctx context.Context, source input.Source, inputConfig input.Config, c1Config c1.Config) Outcome {
+func Analyse(ctx context.Context, source input.Source, inputConfig input.Config, c1Config c1.Config, c2Config c2.Config) Outcome {
 	replay, err := input.Replay(ctx, source, inputConfig)
 	if err != nil {
 		return Outcome{Report: report.InputFailure(replay, AnalyserVersion, inputFailureCode(err)), Err: err}
@@ -30,7 +31,11 @@ func Analyse(ctx context.Context, source input.Source, inputConfig input.Config,
 	if err != nil {
 		return Outcome{Report: report.AnalysisFailure(replay, redacted.PolicyVersion, AnalyserVersion, analysisFailureCode(err)), Err: err}
 	}
-	return Outcome{Report: report.Complete(replay, redacted.PolicyVersion, AnalyserVersion, result)}
+	structural, err := c2.Analyse(ctx, redacted, result, c2Config)
+	if err != nil {
+		return Outcome{Report: report.AnalysisFailure(replay, redacted.PolicyVersion, AnalyserVersion, analysisFailureCode(err)), Err: err}
+	}
+	return Outcome{Report: report.Complete(replay, redacted.PolicyVersion, AnalyserVersion, result, structural)}
 }
 
 func inputFailureCode(err error) string {
@@ -49,7 +54,7 @@ func inputFailureCode(err error) string {
 }
 
 func analysisFailureCode(err error) string {
-	if errors.Is(err, c1.ErrCancelled) || errors.Is(err, context.Canceled) {
+	if errors.Is(err, c1.ErrCancelled) || errors.Is(err, c2.ErrCancelled) || errors.Is(err, context.Canceled) {
 		return "cancelled"
 	}
 	return "analysis_failed"

@@ -37,6 +37,8 @@ Potential template:
 Payment timeout user={user_id} request={request_id}
 ```
 
+PF-1004 implements a deliberately conservative, report-only C2 candidate. It processes only C1 representatives from redacted input. It partitions candidates by complete redacted resource and scope context plus severity, preserves ordinary attributes as part of the candidate shape and masks only strongly recognisable identifier, UUID, IP, timestamp and source-location forms. Error and status codes remain literal. It does not extract, retain or report raw parameter values, template strings or persistent learner state. Structured bodies, bodies over the configured limit, token overflows and state overflows are exclusions rather than candidate groups.
+
 ### Context identity
 Resource/service/version/environment dimensions may distinguish events that otherwise share a template.
 
@@ -161,4 +163,4 @@ Minimum output:
 
 V0 is logs-only and accepts replayed or explicitly best-effort replicated input. It performs redacted, bounded C1 and C2 opportunity analysis only. C3 payload extraction and all active transformation are deferred to Phase 2 after safety gates pass.
 
-The current implementation supports C1 only. Its report labels canonical-byte reduction as a counterfactual opportunity. It does not measure compressed wire bytes, vendor billable units or customer financial savings.
+The current implementation supports C1 and bounded report-only C2. The report labels canonical-byte and structural-record figures as counterfactual opportunities. It does not measure compressed wire bytes, vendor billable units or customer financial savings. C2 output is not an active-compaction policy, a global template identity or evidence content.

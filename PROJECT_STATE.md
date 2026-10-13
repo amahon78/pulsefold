@@ -58,8 +58,8 @@ The following are treated as locked until superseded by an ADR:
 
 - 2026-10-12: PF-0001..PF-0005 research and PF-0006 independent architecture verification accepted. PF-0007 froze V0 and accepted ADRs 0007 through 0010.
 - 2026-10-12: ADR 0011 accepted Go and `github.com/amahon78/pulsefold` as the core implementation language and module path. PF-1001 accepted a bounded offline OTLP/JSON replay boundary. It is not a production forwarding path.
-- 2026-10-13: PF-1002 added deterministic, truth-labelled synthetic OTLP fixtures and the versioned `v1-fixture-safety` redaction boundary. PF-1003 added bounded, collision-safe, report-only C1 analysis and the initial machine-readable report command.
-- Phase 1 benchmarks remain execution gates. PF-1003 benchmark results do not imply C2 results, active-compaction safety or production readiness.
+- 2026-10-13: PF-1002 added deterministic, truth-labelled synthetic OTLP fixtures and the versioned `v1-fixture-safety` redaction boundary. PF-1003 added bounded, collision-safe, report-only C1 analysis and the initial machine-readable report command. PF-1004 added bounded C2 structural candidate analysis after C1, with resource/scope and severity partitions, no raw parameter extraction, visible exclusions and synthetic correctness, partition and performance tests.
+- Phase 1 benchmarks remain execution gates. PF-1004 benchmark results do not imply active-compaction safety, global cross-instance template stability or production readiness.
 
 ## Phase 0 exit condition
 

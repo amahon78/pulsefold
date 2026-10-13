@@ -78,7 +78,10 @@ Measure report-only C1 opportunities with collision-safe identity, hard state ca
 **Delivered:** typed, order-independent canonical identities with full equality verification after SHA-256 bucketing, explicit entry, state-byte and identity-byte limits, deterministic JSON reporting and C1 benchmarks. C1 is report-only and does not modify replay input.
 
 ### PF-1004: Report-only template analysis benchmark
+**Status:** Complete (2026-10-13).
 Benchmark source-provided templates and inferred templates. Measure unsafe merges, novelty preservation and cross-instance agreement. No template-driven transformation.
+
+**Delivered:** bounded C2 conservative Drain-style structural candidate analysis after redaction and C1, with full redacted resource/scope and severity partitions, no parameter extraction or template output, visible exclusions and overflow. Deterministic synthetic evaluation covers source templates, truth-labelled correctness, unsafe merges and splits, novelty and error preservation, shuffle and partition comparisons plus C1/C2 benchmarks.
 
 ### PF-1005: Shadow coverage and economics accounting
 Record accepted input, capture drops, malformed records, state overflow, raw canonical bytes and separately measured wire or contract-specific billing estimates.

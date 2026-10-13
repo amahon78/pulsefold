@@ -56,7 +56,7 @@ PulseFold V1 will answer:
 
 **V0 scope is frozen. Phase 1 implementation is limited to the V0 analyser and its benchmark harness.**
 
-The current implementation accepts one bounded OTLP/JSON `ExportLogsServiceRequest` for offline replay. It applies a versioned redaction policy before running bounded, collision-safe C1 exact-duplicate opportunity analysis, then emits a deterministic JSON report. It is an isolated analysis input only and has no network listener or production-forwarding role.
+The current implementation accepts one bounded OTLP/JSON `ExportLogsServiceRequest` for offline replay. It applies a versioned redaction policy, bounded collision-safe C1 exact-duplicate analysis and bounded C2 structural-candidate analysis before emitting a deterministic JSON report. C2 is conservative, partitions by redacted resource and scope context plus severity, retains no extracted parameters and reports no template text. It is an isolated analysis input only and has no network listener or production-forwarding role.
 
 See:
 

@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/amahon78/pulsefold/internal/c1"
+	"github.com/amahon78/pulsefold/internal/c2"
 	"github.com/amahon78/pulsefold/internal/fixture"
 	"github.com/amahon78/pulsefold/internal/input"
 	"github.com/amahon78/pulsefold/internal/report"
@@ -19,11 +20,11 @@ func TestAnalyseProducesPayloadFreeDeterministicReport(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	first := Analyse(context.Background(), source(payload), input.Config{}, zeroC1Config())
+	first := Analyse(context.Background(), source(payload), input.Config{}, zeroC1Config(), zeroC2Config())
 	if first.Err != nil {
 		t.Fatal(first.Err)
 	}
-	second := Analyse(context.Background(), source(payload), input.Config{}, zeroC1Config())
+	second := Analyse(context.Background(), source(payload), input.Config{}, zeroC1Config(), zeroC2Config())
 	if second.Err != nil {
 		t.Fatal(second.Err)
 	}
@@ -51,7 +52,7 @@ func TestAnalyseReturnsSafeFailureReportForMalformedInput(t *testing.T) {
 	outcome := Analyse(context.Background(), input.ReaderSource{
 		Reader: strings.NewReader(`{"resourceLogs":` + secret),
 		Info:   input.SourceMetadata{Identity: "malformed", Kind: input.SourceOfflineReplay, Format: input.FormatOTLPJSON},
-	}, input.Config{}, zeroC1Config())
+	}, input.Config{}, zeroC1Config(), zeroC2Config())
 	if outcome.Err == nil || outcome.Report.Status != report.StatusInputFailed || outcome.Report.Failure.Code != "malformed_input" {
 		t.Fatalf("unexpected malformed outcome: %#v", outcome.Report)
 	}
@@ -64,10 +65,36 @@ func TestAnalyseReturnsSafeFailureReportForMalformedInput(t *testing.T) {
 	}
 }
 
+func TestAnalyseC2ReportDoesNotContainTemplateOrRawTelemetry(t *testing.T) {
+	scenario := fixture.GenerateTemplateScenario(fixture.Config{Seed: 11})
+	payload, err := protojson.Marshal(scenario.Request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	outcome := Analyse(context.Background(), source(payload), input.Config{}, zeroC1Config(), zeroC2Config())
+	if outcome.Err != nil || outcome.Report.C2 == nil || outcome.Report.C2.SourceTemplateRecords == 0 {
+		t.Fatalf("unexpected C2 outcome: %#v", outcome)
+	}
+	var output bytes.Buffer
+	if err := report.WriteJSON(&output, outcome.Report); err != nil {
+		t.Fatal(err)
+	}
+	encoded := output.String()
+	for _, forbidden := range []string{"login accepted", "pf_fake_secret_", "Bearer ", "gateway failed"} {
+		if strings.Contains(encoded, forbidden) {
+			t.Fatalf("C2 report leaked telemetry text %q", forbidden)
+		}
+	}
+}
+
 func source(payload []byte) input.ReaderSource {
 	return input.ReaderSource{Reader: bytes.NewReader(payload), Info: input.SourceMetadata{Identity: "runner-fixture", Partition: "test", Kind: input.SourceOfflineReplay, Format: input.FormatOTLPJSON}}
 }
 
 func zeroC1Config() c1.Config {
 	return c1.Config{}
+}
+
+func zeroC2Config() c2.Config {
+	return c2.Config{}
 }

@@ -26,6 +26,8 @@ PulseFold should be measurable.
 - evidence reference validity
 - report coverage, exclusion and overflow visibility
 
+PF-1004 measures C2 against independently labelled synthetic groups with weighted pairwise precision, recall and F1, unsafe merge and split rates, novel and error preservation, source-template candidate coverage, deterministic shuffled-order agreement and two- and four-partition comparisons. It reports the limits of this synthetic measurement: C2 has no claim of permanent cross-instance convergence and public corpora remain subject to an explicit licence review.
+
 ### Performance
 - events/sec
 - MB/sec

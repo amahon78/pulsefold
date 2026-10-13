@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/amahon78/pulsefold/internal/c1"
+	"github.com/amahon78/pulsefold/internal/c2"
 	"github.com/amahon78/pulsefold/internal/input"
 )
 
@@ -32,6 +33,7 @@ type Report struct {
 	AnalysisInterval       AnalysisInterval `json:"analysis_interval"`
 	Coverage               Coverage         `json:"coverage"`
 	C1                     *C1              `json:"c1,omitempty"`
+	C2                     *C2              `json:"c2,omitempty"`
 	Failure                *Failure         `json:"failure,omitempty"`
 }
 
@@ -81,6 +83,40 @@ type C1 struct {
 	StateCapReached         bool   `json:"state_cap_reached"`
 }
 
+// C2 reports bounded structural-candidate counts only. It contains neither a
+// template string nor extracted parameters, so a report cannot become a
+// second telemetry store.
+type C2 struct {
+	AlgorithmVersion         string   `json:"algorithm_version"`
+	CandidatePolicyVersion   string   `json:"candidate_policy_version"`
+	C1RepresentativeRecords  uint64   `json:"c1_representative_records"`
+	RecordsAnalysed          uint64   `json:"records_analysed"`
+	CandidateRecords         uint64   `json:"candidate_records"`
+	InferredTemplateGroups   uint64   `json:"inferred_template_groups"`
+	SourceTemplateRecords    uint64   `json:"source_template_records"`
+	SourceTemplateGroups     uint64   `json:"source_template_groups"`
+	SourceTemplateExcluded   uint64   `json:"source_template_excluded_records"`
+	AdditionalOpportunity    uint64   `json:"additional_counterfactual_records"`
+	ExcludedRecords          uint64   `json:"excluded_records"`
+	ExcludedUnsupportedBody  uint64   `json:"excluded_unsupported_body_records"`
+	ExcludedOversizedBody    uint64   `json:"excluded_oversized_body_records"`
+	ExcludedTooManyTokens    uint64   `json:"excluded_too_many_token_records"`
+	ExcludedStateCap         uint64   `json:"excluded_state_cap_records"`
+	Partitions               uint64   `json:"partitions"`
+	StateBytes               uint64   `json:"state_bytes"`
+	StateCapReached          bool     `json:"state_cap_reached"`
+	SourceTemplateCapReached bool     `json:"source_template_cap_reached"`
+	SourceTemplateStateCap   bool     `json:"source_template_state_cap_reached"`
+	MaxClusters              int      `json:"max_clusters"`
+	MaxPartitions            int      `json:"max_partitions"`
+	MaxStateBytes            int      `json:"max_state_bytes"`
+	MaxBodyBytes             int      `json:"max_body_bytes"`
+	MaxTemplateBytes         int      `json:"max_template_bytes"`
+	MaxTokens                int      `json:"max_tokens"`
+	MaxSourceTemplates       int      `json:"max_source_templates"`
+	Limitations              []string `json:"limitations"`
+}
+
 // Failure is a static classification. Error text is intentionally omitted so
 // parser errors cannot expose raw telemetry in a report or diagnostic path.
 type Failure struct {
@@ -88,7 +124,7 @@ type Failure struct {
 	Code  string `json:"code"`
 }
 
-func Complete(replay input.ReplayResult, policyVersion, analyserVersion string, result c1.Result) Report {
+func Complete(replay input.ReplayResult, policyVersion, analyserVersion string, result c1.Result, c2Result c2.Result) Report {
 	report := base(replay, analyserVersion)
 	report.Status = StatusComplete
 	report.RedactionPolicyVersion = policyVersion
@@ -109,6 +145,25 @@ func Complete(replay input.ReplayResult, policyVersion, analyserVersion string, 
 		ExcludedStateCap:        result.ExcludedStateCap,
 		StateBytes:              result.StateBytes,
 		StateCapReached:         result.StateCapReached,
+	}
+	report.C2 = &C2{
+		AlgorithmVersion: c2Result.AlgorithmVersion, CandidatePolicyVersion: c2Result.CandidatePolicyVersion,
+		C1RepresentativeRecords: c2Result.C1RepresentativeRecords, RecordsAnalysed: c2Result.RecordsAnalysed,
+		CandidateRecords: c2Result.CandidateRecords, InferredTemplateGroups: c2Result.InferredTemplateGroups,
+		SourceTemplateRecords: c2Result.SourceTemplateRecords, SourceTemplateGroups: c2Result.SourceTemplateGroups, SourceTemplateExcluded: c2Result.SourceTemplateExcluded,
+		AdditionalOpportunity: c2Result.AdditionalOpportunity, ExcludedRecords: c2Result.ExcludedRecords,
+		ExcludedUnsupportedBody: c2Result.ExcludedUnsupportedBody, ExcludedOversizedBody: c2Result.ExcludedOversizedBody,
+		ExcludedTooManyTokens: c2Result.ExcludedTooManyTokens, ExcludedStateCap: c2Result.ExcludedStateCap,
+		Partitions: c2Result.Partitions, StateBytes: c2Result.StateBytes, StateCapReached: c2Result.StateCapReached,
+		SourceTemplateCapReached: c2Result.SourceTemplateCapReached, SourceTemplateStateCap: c2Result.SourceTemplateStateCap, MaxClusters: c2Result.MaxClusters,
+		MaxPartitions: c2Result.MaxPartitions, MaxStateBytes: c2Result.MaxStateBytes, MaxBodyBytes: c2Result.MaxBodyBytes, MaxTemplateBytes: c2Result.MaxTemplateBytes,
+		MaxTokens: c2Result.MaxTokens, MaxSourceTemplates: c2Result.MaxSourceTemplates,
+		Limitations: []string{
+			"C2 is report-only and does not modify telemetry or authorise retention decisions.",
+			"C2 does not emit template text or extract raw parameters.",
+			"C2 candidate groups are bounded to this replay and are not global evidence identities.",
+			"Correctness and cross-instance agreement require independently labelled evaluation data.",
+		},
 	}
 	return report
 }
@@ -144,7 +199,7 @@ func base(replay input.ReplayResult, analyserVersion string) Report {
 	return Report{
 		SchemaVersion:        SchemaVersion,
 		AnalyserVersion:      analyserVersion,
-		CounterfactualNotice: "C1 metrics are a counterfactual reduction opportunity, not observed financial saving.",
+		CounterfactualNotice: "Each C1/C2 metric is a redacted, report-only counterfactual reduction opportunity, not observed financial saving or a transformation decision.",
 		Source: Source{
 			Identity: replay.Source.Identity, Partition: replay.Source.Partition,
 			Kind: string(replay.Source.Kind), Format: replay.Source.Format,

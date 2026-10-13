@@ -30,7 +30,7 @@ Production forwarding remains outside the V0 process and is not modified.
 
 V0 is logs-only. C1 and C2 are report-only candidates, not downstream transformations. V0 does not contain an incident engine, notification router or built-in investigator.
 
-The current Phase 1 slice implements only C1. It uses offline OTLP/JSON replay, a mandatory redaction boundary and bounded exact-duplicate analysis in one local process. This process is an analyser, not a forwarding component. C2 remains deferred to PF-1004.
+The current Phase 1 slice implements C1 and C2. It uses offline OTLP/JSON replay, a mandatory redaction boundary, bounded exact-duplicate analysis and bounded structural-candidate analysis in one local process. C2 receives only C1 representatives from the redacted batch, partitions by full redacted resource and scope context plus severity, and emits no templates or extracted parameters. This process is an analyser, not a forwarding component.
 
 ## 3. Longer-term logical architecture
 
@@ -103,7 +103,7 @@ V0 reports opportunities only. Any future active C1 policy must use collision-sa
 ### Stage C2: template aggregation
 Identify stable message structure and variable parameters.
 
-V0 reports source-provided and inferred template candidates only. A template is not globally stable evidence identity and cannot authorise deletion.
+V0 reports source-provided and inferred template candidate counts only. The PF-1004 inferred candidate is a conservative Drain-style token normaliser, evaluated against `github.com/jaeyo/go-drain3` v0.1.2, the implementation wrapped by the upstream Collector Drain processor, but intentionally not a Collector processor. The baseline test demonstrates that its default similarity threshold can generalise distinct error codes, so C2 keeps error and status codes literal. C2 has explicit global cluster, partition, byte, body and token caps, does not extract raw parameters and does not persist learner state. Structured and oversized bodies are visible exclusions. A template is not globally stable evidence identity and cannot authorise deletion.
 
 ### Stage C3: repeated payload extraction
 Detect repeated large payload sections and replace internal copies with a content reference for PulseFold analysis.

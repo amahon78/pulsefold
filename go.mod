@@ -3,12 +3,14 @@ module github.com/amahon78/pulsefold
 go 1.27.0
 
 require (
+	github.com/jaeyo/go-drain3 v0.1.2
 	go.opentelemetry.io/proto/otlp v1.11.1
 	google.golang.org/protobuf v1.36.12
 )
 
 require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.31.0 // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	golang.org/x/net v0.59.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/text v0.42.0 // indirect

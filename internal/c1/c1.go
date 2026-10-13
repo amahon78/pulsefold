@@ -75,12 +75,25 @@ type Result struct {
 	ExcludedStateCap        uint64
 	StateBytes              uint64
 	StateCapReached         bool
+	// Representatives retains only input positions and counts for accepted exact
+	// groups. C2 consumes these positions to analyse structural repetition after
+	// C1 without receiving a raw input alternative. It is deliberately omitted
+	// from reports.
+	Representatives []Representative
+}
+
+// Representative identifies the first redacted record for one accepted exact
+// group. It does not contain an identity, body or attribute value.
+type Representative struct {
+	InputIndex int
+	Count      uint64
 }
 
 type group struct {
 	identity []byte
 	count    uint64
 	bytes    uint64
+	index    int
 }
 
 // Analyse calculates the result for one finite replay batch. The replay call
@@ -96,11 +109,12 @@ func Analyse(ctx context.Context, batch redaction.Batch, config Config) (Result,
 		RecordsPresented:        uint64(batch.Len()),
 	}
 	buckets := make(map[string][]*group)
+	groups := make([]*group, 0)
 	groupCount := 0
 
 	for index := 0; index < batch.Len(); index++ {
 		if err := ctx.Err(); err != nil {
-			return finalise(result, buckets), fmt.Errorf("%w: %v", ErrCancelled, err)
+			return finalise(result, groups), fmt.Errorf("%w: %v", ErrCancelled, err)
 		}
 		identity, err := Canonical(batch.Record(index))
 		if err != nil {
@@ -139,25 +153,26 @@ func Analyse(ctx context.Context, batch redaction.Batch, config Config) (Result,
 			continue
 		}
 		identityCopy := append([]byte(nil), identity...)
-		buckets[bucketKey] = append(buckets[bucketKey], &group{identity: identityCopy, count: 1, bytes: uint64(len(identityCopy))})
+		created := &group{identity: identityCopy, count: 1, bytes: uint64(len(identityCopy)), index: index}
+		buckets[bucketKey] = append(buckets[bucketKey], created)
+		groups = append(groups, created)
 		groupCount++
 		result.RecordsAnalysed++
 		result.InputCanonicalBytes += uint64(len(identityCopy))
 		result.StateBytes += stateCost
 	}
-	return finalise(result, buckets), nil
+	return finalise(result, groups), nil
 }
 
-func finalise(result Result, buckets map[string][]*group) Result {
-	for _, bucket := range buckets {
-		for _, group := range bucket {
-			result.UniqueIdentities++
-			result.CounterfactualRecords++
-			result.CounterfactualBytes += group.bytes
-			if group.count > 1 {
-				result.DuplicateGroups++
-				result.DuplicateRecords += group.count - 1
-			}
+func finalise(result Result, groups []*group) Result {
+	for _, group := range groups {
+		result.UniqueIdentities++
+		result.CounterfactualRecords++
+		result.CounterfactualBytes += group.bytes
+		result.Representatives = append(result.Representatives, Representative{InputIndex: group.index, Count: group.count})
+		if group.count > 1 {
+			result.DuplicateGroups++
+			result.DuplicateRecords += group.count - 1
 		}
 	}
 	if result.InputCanonicalBytes >= result.CounterfactualBytes {
@@ -185,6 +200,21 @@ func Canonical(record redaction.Record) ([]byte, error) {
 	encoder.resource(resource, resourceSchema)
 	encoder.scope(scope, scopeSchema)
 	encoder.log(log)
+	if encoder.err != nil {
+		return nil, encoder.err
+	}
+	return encoder.buffer.Bytes(), nil
+}
+
+// ContextCanonical returns a deterministic redacted resource and scope
+// identity. Structural analysis uses it to keep independently deployed or
+// attributed resources apart even when their log bodies share a shape.
+func ContextCanonical(record redaction.Record) ([]byte, error) {
+	resource, resourceSchema, scope, scopeSchema, _ := record.Clone()
+	encoder := canonicalEncoder{}
+	encoder.string("pulsefold-c1-context")
+	encoder.resource(resource, resourceSchema)
+	encoder.scope(scope, scopeSchema)
 	if encoder.err != nil {
 		return nil, encoder.err
 	}

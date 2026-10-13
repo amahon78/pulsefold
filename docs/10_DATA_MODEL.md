@@ -75,6 +75,6 @@ V0 requires only report provenance: source partition, observed time range, redac
 
 ## 7. Implemented V0 report fields
 
-The initial JSON report has schema version `pulsefold/v0alpha1`. It records source identity and delivery class, analysis interval, input coverage, redaction-policy version, analyser version and C1 candidate-policy and canonicalisation versions. C1 fields include records presented and analysed, unique identities, duplicate groups and records, counterfactual record and canonical-byte counts, exclusions and state-cap status.
+The initial JSON report has schema version `pulsefold/v0alpha1`. It records source identity and delivery class, analysis interval, input coverage, redaction-policy version, analyser version and C1/C2 candidate-policy versions. C1 fields include records presented and analysed, unique identities, duplicate groups and records, counterfactual record and canonical-byte counts, exclusions and state-cap status. C2 fields include C1 representatives, inferred and source-template candidate group counts, structural counterfactual records, partition count, configured caps and explicit exclusions.
 
-The report contains no telemetry body, attribute value, canonical identity, fingerprint or raw error text. Its C1 statement explicitly describes a counterfactual reduction opportunity, not observed financial saving.
+The report contains no telemetry body, attribute value, canonical identity, fingerprint, template string, extracted parameter or raw error text. Its C1/C2 statement explicitly describes a counterfactual reduction opportunity, not observed financial saving or a transformation decision.
