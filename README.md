@@ -82,6 +82,22 @@ go run ./cmd/pulsefold analyse ./telemetry.otlp.json --billing ./billing.json --
 
 The report keeps the claims separate: C1 is an exact, redacted canonical-equality counterfactual within its analysed denominator. C2 is an inferred structural candidate beyond C1, not verified or removable telemetry. Coverage, exclusions, unknown wire bytes, unavailable economics and limitations are shown rather than extrapolated. Every report has a payload-free manifest and a SHA-256 consistency check. That check detects accidental or uncoordinated changes, but does not authenticate the report or store evidence content.
 
+## Laboratory verification
+
+The reproducible V0 fault matrix runs through the complete local pipeline and emits versioned JSON through the verbose test log:
+
+```bash
+go test ./internal/harness -run TestFaultMatrix -v
+```
+
+Run the synthetic performance matrix locally with:
+
+```bash
+go test ./internal/harness -run '^$' -bench BenchmarkV0Pipeline -benchmem
+```
+
+These are laboratory results for bounded offline replay, not production capacity or active-compaction approval.
+
 See:
 
 - `PROJECT_STATE.md`

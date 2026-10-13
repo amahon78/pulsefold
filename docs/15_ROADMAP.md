@@ -12,6 +12,8 @@ Delivered:
 
 ## Milestone 1: Shadow
 
+**Laboratory implementation status:** Complete, 2026-10-13. This does not approve production deployment, active compaction or C2-based destructive transformation.
+
 User outcome:
 
 > PulseFold shows me how much telemetry could be reduced without changing what I currently send downstream.

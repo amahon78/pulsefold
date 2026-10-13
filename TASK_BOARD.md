@@ -59,6 +59,8 @@ Freeze the first executable scope after research.
 
 ## Phase 1: Telemetry laboratory
 
+**Status:** Complete (2026-10-13). This confirms the V0 laboratory implementation only, not production readiness or approval for active compaction.
+
 ### PF-1001: Offline OTLP replay and replica-input boundary
 **Status:** Complete (2026-10-12).
 Accept logs-only OTLP replay. Document any replicated input as best effort and non-authoritative. Do not modify production forwarding.
@@ -102,7 +104,10 @@ Produce a reproducible versioned report with C1/C2 opportunities, safety exclusi
 **Delivered:** terminal text is the default `pulsefold analyse` output and `--format json` provides the machine-readable equivalent. Both output modes expose coverage, exclusions, C1 counterfactual exact repetition, C2 inferred structural candidates, optional scoped billing estimates, unavailable measurements, deterministic limitations and PF-1006 manifest integrity status without telemetry content or source paths.
 
 ### PF-1008: Fault and performance benchmark harness
+**Status:** Complete (2026-10-13).
 Test replay, restart, blocked analysis output, malformed data, giant payloads, high cardinality and bounded-resource behaviour.
+
+**Delivered:** deterministic full-pipeline fault matrix with versioned JSON test output, replay boundary checks, state-cap and source-label attacks, adversarial content and C1/C2 checks, accounting and provenance checks, renderer-failure and restart-isolation tests, privacy scanning and workload plus scaling benchmarks. Results are local, synthetic laboratory observations rather than production thresholds.
 
 ## Phase 2: Safe compaction
 

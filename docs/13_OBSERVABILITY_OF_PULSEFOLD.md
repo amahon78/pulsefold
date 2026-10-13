@@ -13,6 +13,7 @@ V0 analyser:
 - state overflow and analysis failures
 - report generation latency
 - report integrity verification failures
+- bounded-analysis exclusions by C1 and C2 reason
 
 Future telemetry plane:
 

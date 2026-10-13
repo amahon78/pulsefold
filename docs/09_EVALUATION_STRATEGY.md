@@ -56,6 +56,16 @@ The implementation can calculate a gross observability cost opportunity only for
 
 PF-1007 verifies the complete replay-to-report path for complete, zero-input, malformed and bounded-input outcomes. The report must retain C1 and C2 as separate claims, show the relevant coverage denominator, preserve unavailable economics and verify its manifest commitment after JSON round trip. Terminal output is inspected for the same safety distinctions and for absence of fixture secrets or input paths. These are report-correctness checks, not evidence that active compaction is safe or that an estimate will match a production bill.
 
+### PF-1008 laboratory harness
+
+Run the deterministic fault matrix with `go test ./internal/harness -run TestFaultMatrix -v`. Its verbose output contains a small machine-readable result with schema `pulsefold/v0-fault-matrix/v1`. The matrix drives the full offline pipeline through empty, malformed, truncated, bounded, unsafe-source and adversarial payload cases, C1 and C2 state exclusions, compatible and unavailable billing mappings, privacy checks, provenance verification and text-renderer failure.
+
+Run the performance matrix with `go test ./internal/harness -run '^$' -bench BenchmarkV0Pipeline -benchmem`. It includes small and medium unique and repetitive workloads, high-cardinality records, large bodies, a C2-heavy fixture and mixed synthetic telemetry. `BenchmarkV0PipelineScaling` uses 1,024, 2,048 and 4,096 deterministic unique-record workloads. Existing component benchmarks isolate C1, C2, accounting, manifest and integrity work.
+
+On 2026-10-13, an Apple M1 Pro running macOS 26.7.1 and Go 1.27.2 measured the complete matrix at roughly 0.47 ms to 108 ms per operation, depending on workload. The scaling series measured 26.2 ms, 51.8 ms and 100.4 ms for 1,024, 2,048 and 4,096 unique records, with throughput near 8 MB/s. These are machine-specific synthetic observations, not regression thresholds, complexity proofs or deployment sizing guidance. A 4,096-high-cardinality resource observation allocated about 21 MB during the run while C1 and C2 state stayed below their configured 1 MiB caps. This is not a whole-process memory ceiling.
+
+The harness does not test a live replica, forwarding backpressure, process restart, persistent-state recovery, production retention or destructive compaction. It verifies only the stateless, offline V0 analyser behaviour.
+
 ## 3. Signal evaluation
 
 Post-V0. V0 does not generate operational signals.

@@ -25,6 +25,8 @@ PF-1006 tests complete, partial, input-failed and analysis-failed manifests with
 
 PF-1007 adds end-to-end text and JSON report tests for complete structural fixtures, malformed input, source-label privacy, billing availability, C1/C2 separation, integrity status and static limitations. It verifies that terminal output remains payload-free and never presents integrity as authentication. A complete report-path benchmark covers replay, redaction, C1, C2, report construction and text rendering.
 
+PF-1008 adds the deterministic `internal/harness` fault matrix across the complete V0 pipeline. It covers input failures, source-label attacks, replay-limit boundaries, secret and prompt-shaped content, C1 collision and caps, C2 caps and adversarial grouping, accounting availability, report integrity, renderer failure, replay isolation and payload-free output. Its eight-workload performance matrix and three-size scaling series report local allocations and throughput without machine-specific pass/fail thresholds.
+
 ### Scenario
 Synthetic end-to-end replay and report flows. Incident flows are post-V0.
 
