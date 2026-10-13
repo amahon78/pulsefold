@@ -6,6 +6,7 @@ import (
 	"io"
 	"time"
 
+	"github.com/amahon78/pulsefold/internal/accounting"
 	"github.com/amahon78/pulsefold/internal/c1"
 	"github.com/amahon78/pulsefold/internal/c2"
 	"github.com/amahon78/pulsefold/internal/input"
@@ -24,17 +25,18 @@ const (
 // Report is intentionally evidence-oriented metadata, not a telemetry export.
 // It contains no record body, attribute value, canonical identity or hash.
 type Report struct {
-	SchemaVersion          string           `json:"schema_version"`
-	AnalyserVersion        string           `json:"analyser_version"`
-	Status                 Status           `json:"status"`
-	CounterfactualNotice   string           `json:"counterfactual_notice"`
-	RedactionPolicyVersion string           `json:"redaction_policy_version,omitempty"`
-	Source                 Source           `json:"source"`
-	AnalysisInterval       AnalysisInterval `json:"analysis_interval"`
-	Coverage               Coverage         `json:"coverage"`
-	C1                     *C1              `json:"c1,omitempty"`
-	C2                     *C2              `json:"c2,omitempty"`
-	Failure                *Failure         `json:"failure,omitempty"`
+	SchemaVersion          string            `json:"schema_version"`
+	AnalyserVersion        string            `json:"analyser_version"`
+	Status                 Status            `json:"status"`
+	CounterfactualNotice   string            `json:"counterfactual_notice"`
+	RedactionPolicyVersion string            `json:"redaction_policy_version,omitempty"`
+	Source                 Source            `json:"source"`
+	AnalysisInterval       AnalysisInterval  `json:"analysis_interval"`
+	Coverage               Coverage          `json:"coverage"`
+	Accounting             accounting.Result `json:"accounting"`
+	C1                     *C1               `json:"c1,omitempty"`
+	C2                     *C2               `json:"c2,omitempty"`
+	Failure                *Failure          `json:"failure,omitempty"`
 }
 
 type Source struct {
@@ -52,69 +54,73 @@ type AnalysisInterval struct {
 }
 
 type Coverage struct {
-	RecordsObserved    uint64 `json:"records_observed"`
-	RecordsAccepted    uint64 `json:"records_accepted"`
-	RecordsRejected    uint64 `json:"records_rejected"`
-	MalformedRecords   uint64 `json:"malformed_records"`
-	MalformedInput     uint64 `json:"malformed_input"`
-	UnsupportedRecords uint64 `json:"unsupported_records"`
-	UnsupportedInput   uint64 `json:"unsupported_input"`
-	CaptureErrors      uint64 `json:"capture_errors"`
-	InputBytesRead     uint64 `json:"input_bytes_read"`
-	InputByteLimitHit  bool   `json:"input_byte_limit_hit"`
+	RecordsObserved      uint64 `json:"records_observed"`
+	RecordsObservedKnown bool   `json:"records_observed_known"`
+	RecordsAccepted      uint64 `json:"records_accepted"`
+	RecordsRejected      uint64 `json:"records_rejected"`
+	MalformedRecords     uint64 `json:"malformed_records"`
+	MalformedInput       uint64 `json:"malformed_input"`
+	UnsupportedRecords   uint64 `json:"unsupported_records"`
+	UnsupportedInput     uint64 `json:"unsupported_input"`
+	CaptureErrors        uint64 `json:"capture_errors"`
+	InputBytesRead       uint64 `json:"input_bytes_read"`
+	InputBytesKnown      bool   `json:"input_bytes_known"`
+	InputByteLimitHit    bool   `json:"input_byte_limit_hit"`
 }
 
 type C1 struct {
-	CanonicalisationVersion string `json:"canonicalisation_version"`
-	CandidatePolicyVersion  string `json:"candidate_policy_version"`
-	RecordsPresented        uint64 `json:"records_presented"`
-	RecordsAnalysed         uint64 `json:"records_analysed"`
-	UniqueIdentities        uint64 `json:"unique_identities"`
-	DuplicateGroups         uint64 `json:"duplicate_groups"`
-	DuplicateRecords        uint64 `json:"duplicate_records"`
-	CounterfactualRecords   uint64 `json:"counterfactual_records"`
-	InputCanonicalBytes     uint64 `json:"input_canonical_bytes"`
-	CounterfactualBytes     uint64 `json:"counterfactual_canonical_bytes"`
-	RawByteOpportunity      uint64 `json:"canonical_raw_byte_opportunity"`
-	ExcludedRecords         uint64 `json:"excluded_records"`
-	ExcludedOversized       uint64 `json:"excluded_oversized_identity_records"`
-	ExcludedStateCap        uint64 `json:"excluded_state_cap_records"`
-	StateBytes              uint64 `json:"state_bytes"`
-	StateCapReached         bool   `json:"state_cap_reached"`
+	Classification          accounting.Classification `json:"classification"`
+	CanonicalisationVersion string                    `json:"canonicalisation_version"`
+	CandidatePolicyVersion  string                    `json:"candidate_policy_version"`
+	RecordsPresented        uint64                    `json:"records_presented"`
+	RecordsAnalysed         uint64                    `json:"records_analysed"`
+	UniqueIdentities        uint64                    `json:"unique_identities"`
+	DuplicateGroups         uint64                    `json:"duplicate_groups"`
+	DuplicateRecords        uint64                    `json:"duplicate_records"`
+	CounterfactualRecords   uint64                    `json:"counterfactual_records"`
+	InputCanonicalBytes     uint64                    `json:"input_canonical_bytes"`
+	CounterfactualBytes     uint64                    `json:"counterfactual_canonical_bytes"`
+	RawByteOpportunity      uint64                    `json:"canonical_raw_byte_opportunity"`
+	ExcludedRecords         uint64                    `json:"excluded_records"`
+	ExcludedOversized       uint64                    `json:"excluded_oversized_identity_records"`
+	ExcludedStateCap        uint64                    `json:"excluded_state_cap_records"`
+	StateBytes              uint64                    `json:"state_bytes"`
+	StateCapReached         bool                      `json:"state_cap_reached"`
 }
 
 // C2 reports bounded structural-candidate counts only. It contains neither a
 // template string nor extracted parameters, so a report cannot become a
 // second telemetry store.
 type C2 struct {
-	AlgorithmVersion         string   `json:"algorithm_version"`
-	CandidatePolicyVersion   string   `json:"candidate_policy_version"`
-	C1RepresentativeRecords  uint64   `json:"c1_representative_records"`
-	RecordsAnalysed          uint64   `json:"records_analysed"`
-	CandidateRecords         uint64   `json:"candidate_records"`
-	InferredTemplateGroups   uint64   `json:"inferred_template_groups"`
-	SourceTemplateRecords    uint64   `json:"source_template_records"`
-	SourceTemplateGroups     uint64   `json:"source_template_groups"`
-	SourceTemplateExcluded   uint64   `json:"source_template_excluded_records"`
-	AdditionalOpportunity    uint64   `json:"additional_counterfactual_records"`
-	ExcludedRecords          uint64   `json:"excluded_records"`
-	ExcludedUnsupportedBody  uint64   `json:"excluded_unsupported_body_records"`
-	ExcludedOversizedBody    uint64   `json:"excluded_oversized_body_records"`
-	ExcludedTooManyTokens    uint64   `json:"excluded_too_many_token_records"`
-	ExcludedStateCap         uint64   `json:"excluded_state_cap_records"`
-	Partitions               uint64   `json:"partitions"`
-	StateBytes               uint64   `json:"state_bytes"`
-	StateCapReached          bool     `json:"state_cap_reached"`
-	SourceTemplateCapReached bool     `json:"source_template_cap_reached"`
-	SourceTemplateStateCap   bool     `json:"source_template_state_cap_reached"`
-	MaxClusters              int      `json:"max_clusters"`
-	MaxPartitions            int      `json:"max_partitions"`
-	MaxStateBytes            int      `json:"max_state_bytes"`
-	MaxBodyBytes             int      `json:"max_body_bytes"`
-	MaxTemplateBytes         int      `json:"max_template_bytes"`
-	MaxTokens                int      `json:"max_tokens"`
-	MaxSourceTemplates       int      `json:"max_source_templates"`
-	Limitations              []string `json:"limitations"`
+	Classification           accounting.Classification `json:"classification"`
+	AlgorithmVersion         string                    `json:"algorithm_version"`
+	CandidatePolicyVersion   string                    `json:"candidate_policy_version"`
+	C1RepresentativeRecords  uint64                    `json:"c1_representative_records"`
+	RecordsAnalysed          uint64                    `json:"records_analysed"`
+	CandidateRecords         uint64                    `json:"candidate_records"`
+	InferredTemplateGroups   uint64                    `json:"inferred_template_groups"`
+	SourceTemplateRecords    uint64                    `json:"source_template_records"`
+	SourceTemplateGroups     uint64                    `json:"source_template_groups"`
+	SourceTemplateExcluded   uint64                    `json:"source_template_excluded_records"`
+	AdditionalOpportunity    uint64                    `json:"additional_counterfactual_records"`
+	ExcludedRecords          uint64                    `json:"excluded_records"`
+	ExcludedUnsupportedBody  uint64                    `json:"excluded_unsupported_body_records"`
+	ExcludedOversizedBody    uint64                    `json:"excluded_oversized_body_records"`
+	ExcludedTooManyTokens    uint64                    `json:"excluded_too_many_token_records"`
+	ExcludedStateCap         uint64                    `json:"excluded_state_cap_records"`
+	Partitions               uint64                    `json:"partitions"`
+	StateBytes               uint64                    `json:"state_bytes"`
+	StateCapReached          bool                      `json:"state_cap_reached"`
+	SourceTemplateCapReached bool                      `json:"source_template_cap_reached"`
+	SourceTemplateStateCap   bool                      `json:"source_template_state_cap_reached"`
+	MaxClusters              int                       `json:"max_clusters"`
+	MaxPartitions            int                       `json:"max_partitions"`
+	MaxStateBytes            int                       `json:"max_state_bytes"`
+	MaxBodyBytes             int                       `json:"max_body_bytes"`
+	MaxTemplateBytes         int                       `json:"max_template_bytes"`
+	MaxTokens                int                       `json:"max_tokens"`
+	MaxSourceTemplates       int                       `json:"max_source_templates"`
+	Limitations              []string                  `json:"limitations"`
 }
 
 // Failure is a static classification. Error text is intentionally omitted so
@@ -124,11 +130,13 @@ type Failure struct {
 	Code  string `json:"code"`
 }
 
-func Complete(replay input.ReplayResult, policyVersion, analyserVersion string, result c1.Result, c2Result c2.Result) Report {
+func Complete(replay input.ReplayResult, policyVersion, analyserVersion string, result c1.Result, c2Result c2.Result, accountingResult accounting.Result) Report {
 	report := base(replay, analyserVersion)
 	report.Status = StatusComplete
 	report.RedactionPolicyVersion = policyVersion
+	report.Accounting = accountingResult
 	report.C1 = &C1{
+		Classification:          accounting.Counterfactual,
 		CanonicalisationVersion: result.CanonicalisationVersion,
 		CandidatePolicyVersion:  result.CandidatePolicyVersion,
 		RecordsPresented:        result.RecordsPresented,
@@ -147,6 +155,7 @@ func Complete(replay input.ReplayResult, policyVersion, analyserVersion string, 
 		StateCapReached:         result.StateCapReached,
 	}
 	report.C2 = &C2{
+		Classification:   accounting.Inferred,
 		AlgorithmVersion: c2Result.AlgorithmVersion, CandidatePolicyVersion: c2Result.CandidatePolicyVersion,
 		C1RepresentativeRecords: c2Result.C1RepresentativeRecords, RecordsAnalysed: c2Result.RecordsAnalysed,
 		CandidateRecords: c2Result.CandidateRecords, InferredTemplateGroups: c2Result.InferredTemplateGroups,
@@ -207,15 +216,16 @@ func base(replay input.ReplayResult, analyserVersion string) Report {
 		},
 		AnalysisInterval: outputInterval,
 		Coverage:         coverage(replay.Coverage),
+		Accounting:       accounting.FromInput(replay),
 	}
 }
 
 func coverage(value input.Coverage) Coverage {
 	return Coverage{
-		RecordsObserved: value.RecordsObserved, RecordsAccepted: value.RecordsAccepted,
+		RecordsObserved: value.RecordsObserved, RecordsObservedKnown: value.RecordsObservedKnown, RecordsAccepted: value.RecordsAccepted,
 		RecordsRejected: value.RecordsRejected, MalformedRecords: value.MalformedRecords, MalformedInput: value.MalformedInput,
 		UnsupportedRecords: value.UnsupportedRecords, UnsupportedInput: value.UnsupportedInput,
-		CaptureErrors: value.CaptureErrors, InputBytesRead: value.InputBytesRead,
+		CaptureErrors: value.CaptureErrors, InputBytesRead: value.InputBytesRead, InputBytesKnown: value.InputBytesKnown,
 		InputByteLimitHit: value.InputByteLimitHit,
 	}
 }

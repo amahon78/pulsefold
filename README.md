@@ -58,6 +58,8 @@ PulseFold V1 will answer:
 
 The current implementation accepts one bounded OTLP/JSON `ExportLogsServiceRequest` for offline replay. It applies a versioned redaction policy, bounded collision-safe C1 exact-duplicate analysis and bounded C2 structural-candidate analysis before emitting a deterministic JSON report. C2 is conservative, partitions by redacted resource and scope context plus severity, retains no extracted parameters and reports no template text. It is an isolated analysis input only and has no network listener or production-forwarding role.
 
+The report records whether captured input bytes and observed-record denominators are complete, then separates measured capture coverage, C1 counterfactual canonical-byte opportunity and C2 inferred structural opportunity. Wire bytes are `unknown` unless a future adapter measures a specific link. An optional local JSON billing model can price generic captured bytes, accepted records or C1 canonical bytes using fixed or tiered integer minor-unit rates. It is an operator-supplied contract mapping, not vendor integration or a customer-saving claim. Without a model, billing is explicitly unavailable.
+
 See:
 
 - `PROJECT_STATE.md`

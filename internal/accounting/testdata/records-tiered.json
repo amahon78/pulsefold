@@ -1,0 +1,26 @@
+{
+  "schema_version": "pulsefold/billing-model/v1",
+  "currency": "TST",
+  "metric": "accepted_records",
+  "indexed_fraction": {
+    "numerator": 1,
+    "denominator": 1
+  },
+  "pricing": {
+    "tiers": [
+      {
+        "up_to_units": 10,
+        "rate": {
+          "unit_block": 1,
+          "minor_units_per_block": 1
+        }
+      },
+      {
+        "rate": {
+          "unit_block": 1,
+          "minor_units_per_block": 2
+        }
+      }
+    ]
+  }
+}

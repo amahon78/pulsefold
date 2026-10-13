@@ -24,6 +24,14 @@ go run ./cmd/pulsefold analyse ./telemetry.otlp.json > pulsefold-report.json
 
 The command emits JSON for both a complete analysis and a safe, classified input failure. A failure exits non-zero. It never forwards the replayed data or prints raw telemetry in its diagnostics.
 
+PF-1005 optionally accepts a local, strict JSON billing model:
+
+```bash
+go run ./cmd/pulsefold analyse ./telemetry.otlp.json --billing ./billing.json > pulsefold-report.json
+```
+
+The model uses `pulsefold/billing-model/v1`, one generic metric (`captured_input_bytes`, `accepted_records`, `c1_canonical_bytes`, `wire_bytes` or `retained_byte_days`), an indexed fraction and either a fixed rate or marginal tiers. Prices are integer minor units per integer unit block. `wire_bytes` and `retained_byte_days` are recognised but unavailable in PF-1005 because it does not measure them. The model is validated before analysis and is not a credential, vendor integration or pricing lookup. Omitting it is normal and produces an explicit unavailable billing result.
+
 ## 3. Desired V0 experience
 
 Conceptual:

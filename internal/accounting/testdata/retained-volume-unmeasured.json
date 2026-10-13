@@ -1,0 +1,15 @@
+{
+  "schema_version": "pulsefold/billing-model/v1",
+  "currency": "TST",
+  "metric": "retained_byte_days",
+  "indexed_fraction": {
+    "numerator": 1,
+    "denominator": 1
+  },
+  "pricing": {
+    "fixed": {
+      "unit_block": 1,
+      "minor_units_per_block": 1
+    }
+  }
+}

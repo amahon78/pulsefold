@@ -19,6 +19,8 @@ PF-1003 tests C1 ordinary and absent duplicates, resource and severity boundarie
 
 PF-1004 adds independently labelled structural-template cases for variable user and request identifiers, UUIDs, timestamps, IPs, URLs, stack locations, JSON-like bodies, fake secrets, drift, service and severity boundaries, error codes and structured bodies. C2 tests verify redaction-only input, explicit structured and oversized exclusions, global cluster, partition and byte caps, cancellation, deterministic order behaviour, two- and four-partition conservative accounting, source-template accounting and bounded fuzzing. C2 benchmarks cover combined C1/C2 ordinary and high-cardinality paths.
 
+PF-1005 adds coverage and economics tests for complete, partial, empty, malformed and bounded inputs, C1 and C2 exclusion coverage, deterministic reports, no raw telemetry leakage through accounting or configuration diagnostics, unknown wire measurement and absent billing models. Versioned synthetic billing fixtures cover byte, record, indexed-subset, tiered and retained-volume-unmeasured meters. Tests also cover zero input, fully repeated input, incompatible meters, invalid fractions and exact-arithmetic overflow. A bounded fuzz target exercises strict billing-model parsing, and a benchmark measures incremental accounting allocation cost.
+
 ### Scenario
 Synthetic end-to-end replay and report flows. Incident flows are post-V0.
 

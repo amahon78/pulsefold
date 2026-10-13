@@ -165,3 +165,5 @@ V0 must not modify production forwarding, perform active compaction, provide an 
 ## PR-020: Honest reduction reporting
 
 V0 reports counterfactual reduction opportunity, not generic customer savings. Raw canonical bytes, wire bytes and billable units must be distinguished. A monetary estimate requires an operator-supplied billing model and cost inputs.
+
+PF-1005 reports measured captured-input and record coverage only when the relevant replay denominator is complete. It labels C1 canonical output as counterfactual and C2 structural output as inferred. Wire bytes remain unknown unless measured on a specified path. Optional generic billing estimates use an operator-supplied meter mapping and exact minor-unit arithmetic. They describe gross observability cost opportunity for their stated analysis scope, never net customer saving.

@@ -48,7 +48,9 @@ PF-1004 measures C2 against independently labelled synthetic groups with weighte
 
 ### V0 economics
 
-V0 evaluates reduction opportunity, not generic dollar savings. A monetary estimate requires an explicit customer billing model, retention assumptions and PulseFold operating costs.
+V0 evaluates reduction opportunity, not generic dollar savings. PF-1005 tests complete and partial capture denominators, malformed and rejected input, C1 and C2 exclusions, zero input, fully repeated input, deterministic coverage, unknown wire measurement, absent and incompatible billing models, indexed subsets, fixed and tiered integer pricing and arithmetic overflow. It must not extrapolate a partial analysis to the full input.
+
+The implementation can calculate a gross observability cost opportunity only for an operator-supplied generic meter mapping. It does not have retention assumptions, PulseFold operating cost, egress measurements or vendor contract integration, so it cannot calculate net customer saving.
 
 ## 3. Signal evaluation
 

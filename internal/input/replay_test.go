@@ -37,6 +37,9 @@ func TestReplayAcceptsStructuredLogsAcrossResources(t *testing.T) {
 	if got, want := result.Coverage.RecordsAccepted, uint64(3); got != want {
 		t.Errorf("accepted = %d, want %d", got, want)
 	}
+	if !result.Coverage.RecordsObservedKnown || !result.Coverage.InputBytesKnown {
+		t.Errorf("complete replay did not mark measured denominators: %#v", result.Coverage)
+	}
 	if !result.Coverage.Interval.Known || !result.Coverage.Interval.Start.Equal(time.Unix(0, 10).UTC()) || !result.Coverage.Interval.End.Equal(time.Unix(0, 30).UTC()) {
 		t.Errorf("interval = %#v, want [10,30]ns", result.Coverage.Interval)
 	}
@@ -72,6 +75,9 @@ func TestReplayMalformedInputDoesNotExposeTelemetry(t *testing.T) {
 	}
 	if result.Coverage.CaptureErrors != 1 || result.Coverage.MalformedInput != 1 || result.Coverage.RecordsAccepted != 0 {
 		t.Errorf("coverage = %#v", result.Coverage)
+	}
+	if result.Coverage.RecordsObservedKnown || !result.Coverage.InputBytesKnown {
+		t.Errorf("malformed replay knownness = %#v", result.Coverage)
 	}
 	if strings.Contains(err.Error(), secret) {
 		t.Error("malformed-input error leaked raw telemetry")
@@ -148,6 +154,9 @@ func TestReplayHonoursInputLimitAndCancellation(t *testing.T) {
 	}
 	if !result.Coverage.InputByteLimitHit || result.Coverage.RecordsAccepted != 0 {
 		t.Errorf("limited replay coverage = %#v", result.Coverage)
+	}
+	if result.Coverage.InputBytesKnown || result.Coverage.RecordsObservedKnown {
+		t.Errorf("limited replay falsely claimed complete denominators: %#v", result.Coverage)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())

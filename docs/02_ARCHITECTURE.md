@@ -30,7 +30,11 @@ Production forwarding remains outside the V0 process and is not modified.
 
 V0 is logs-only. C1 and C2 are report-only candidates, not downstream transformations. V0 does not contain an incident engine, notification router or built-in investigator.
 
-The current Phase 1 slice implements C1 and C2. It uses offline OTLP/JSON replay, a mandatory redaction boundary, bounded exact-duplicate analysis and bounded structural-candidate analysis in one local process. C2 receives only C1 representatives from the redacted batch, partitions by full redacted resource and scope context plus severity, and emits no templates or extracted parameters. This process is an analyser, not a forwarding component.
+The current Phase 1 slice implements C1, C2 and report-only accounting. It uses offline OTLP/JSON replay, a mandatory redaction boundary, bounded exact-duplicate analysis and bounded structural-candidate analysis in one local process. C2 receives only C1 representatives from the redacted batch, partitions by full redacted resource and scope context plus severity, and emits no templates or extracted parameters. This process is an analyser, not a forwarding component.
+
+Accounting distinguishes measured replay capture from analysis. A denominator is available only after the replay has completed its bounded read and record enumeration. C1 coverage is measured against accepted records. C2 coverage is measured against C1 representatives, while its existing exclusion counters remain weighted record counts. C1 canonical-byte reduction is counterfactual, C2 structural reduction is inferred, and neither changes telemetry. Wire and compressed transport bytes are unknown in the current implementation.
+
+An optional billing model is an offline, vendor-neutral contract mapping. It supports complete captured-input bytes, accepted records and C1 canonical bytes, with an optional indexed fraction and fixed or marginal tiered integer pricing. It also recognises wire bytes and retained byte-days so it can explicitly report that PF-1005 has not measured them. The model never maps canonical bytes to wire bytes. It can report gross observability cost opportunity for a stated scope, but cannot calculate retention, egress, PulseFold operating cost or net customer saving.
 
 ## 3. Longer-term logical architecture
 

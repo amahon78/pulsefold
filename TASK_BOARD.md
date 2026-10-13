@@ -84,7 +84,10 @@ Benchmark source-provided templates and inferred templates. Measure unsafe merge
 **Delivered:** bounded C2 conservative Drain-style structural candidate analysis after redaction and C1, with full redacted resource/scope and severity partitions, no parameter extraction or template output, visible exclusions and overflow. Deterministic synthetic evaluation covers source templates, truth-labelled correctness, unsafe merges and splits, novelty and error preservation, shuffle and partition comparisons plus C1/C2 benchmarks.
 
 ### PF-1005: Shadow coverage and economics accounting
+**Status:** Complete (2026-10-13).
 Record accepted input, capture drops, malformed records, state overflow, raw canonical bytes and separately measured wire or contract-specific billing estimates.
+
+**Delivered:** explicit captured-byte and observed-record denominator knownness, measured input and per-stage coverage, counterfactual C1 and inferred C2 classifications, explicit unknown wire measurement and optional strict generic billing models. Billing maps only complete captured bytes, accepted records or C1 canonical bytes using exact fixed or tiered minor-unit arithmetic. It reports scoped gross observability cost opportunity, never generic customer or net savings.
 
 ### PF-1006: Evidence manifest and report provenance model
 Implement only the manifest and report provenance needed by V0. Defer evidence content storage and archival.

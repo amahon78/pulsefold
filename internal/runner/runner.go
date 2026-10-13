@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/amahon78/pulsefold/internal/accounting"
 	"github.com/amahon78/pulsefold/internal/c1"
 	"github.com/amahon78/pulsefold/internal/c2"
 	"github.com/amahon78/pulsefold/internal/input"
@@ -21,7 +22,7 @@ type Outcome struct {
 	Err    error
 }
 
-func Analyse(ctx context.Context, source input.Source, inputConfig input.Config, c1Config c1.Config, c2Config c2.Config) Outcome {
+func Analyse(ctx context.Context, source input.Source, inputConfig input.Config, c1Config c1.Config, c2Config c2.Config, accountingOptions accounting.Options) Outcome {
 	replay, err := input.Replay(ctx, source, inputConfig)
 	if err != nil {
 		return Outcome{Report: report.InputFailure(replay, AnalyserVersion, inputFailureCode(err)), Err: err}
@@ -35,7 +36,7 @@ func Analyse(ctx context.Context, source input.Source, inputConfig input.Config,
 	if err != nil {
 		return Outcome{Report: report.AnalysisFailure(replay, redacted.PolicyVersion, AnalyserVersion, analysisFailureCode(err)), Err: err}
 	}
-	return Outcome{Report: report.Complete(replay, redacted.PolicyVersion, AnalyserVersion, result, structural)}
+	return Outcome{Report: report.Complete(replay, redacted.PolicyVersion, AnalyserVersion, result, structural, accounting.Build(replay, result, structural, accountingOptions))}
 }
 
 func inputFailureCode(err error) string {

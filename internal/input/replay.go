@@ -122,17 +122,25 @@ func (c Config) normalised() (Config, error) {
 // Coverage is conservative. Rejected, malformed, unsupported, oversized and
 // failed input is never counted as accepted or analysed.
 type Coverage struct {
-	RecordsObserved    uint64
-	RecordsAccepted    uint64
-	RecordsRejected    uint64
-	MalformedRecords   uint64
-	MalformedInput     uint64
-	UnsupportedRecords uint64
-	UnsupportedInput   uint64
-	CaptureErrors      uint64
-	InputBytesRead     uint64
-	InputByteLimitHit  bool
-	Interval           Interval
+	RecordsObserved uint64
+	// RecordsObservedKnown is true only when the complete decoded request was
+	// enumerated. A malformed, interrupted or bounded input has no safe record
+	// denominator for coverage ratios.
+	RecordsObservedKnown bool
+	RecordsAccepted      uint64
+	RecordsRejected      uint64
+	MalformedRecords     uint64
+	MalformedInput       uint64
+	UnsupportedRecords   uint64
+	UnsupportedInput     uint64
+	CaptureErrors        uint64
+	InputBytesRead       uint64
+	// InputBytesKnown means this replay reached EOF and therefore measured the
+	// complete captured input. It does not claim to measure a production stream
+	// outside this isolated replay boundary.
+	InputBytesKnown   bool
+	InputByteLimitHit bool
+	Interval          Interval
 }
 
 // Interval is derived only from non-zero log timestamps. It never substitutes
@@ -204,7 +212,11 @@ func Replay(ctx context.Context, source Source, config Config) (ReplayResult, er
 		result.Coverage.CaptureErrors++
 		return result, errors.New("close input source")
 	}
+	// A successful bounded read followed by a successful close measured this
+	// captured input exactly, even if its OTLP payload is later malformed.
+	result.Coverage.InputBytesKnown = true
 	if len(bytes.TrimSpace(payload)) == 0 {
+		result.Coverage.RecordsObservedKnown = true
 		return result, nil
 	}
 
@@ -215,14 +227,17 @@ func Replay(ctx context.Context, source Source, config Config) (ReplayResult, er
 		return result, ErrMalformedInput
 	}
 
+	recordsObservedKnown := true
 	for _, resourceLogs := range request.ResourceLogs {
 		if resourceLogs == nil {
 			result.Coverage.UnsupportedInput++
+			recordsObservedKnown = false
 			continue
 		}
 		for _, scopeLogs := range resourceLogs.ScopeLogs {
 			if scopeLogs == nil {
 				result.Coverage.UnsupportedInput++
+				recordsObservedKnown = false
 				continue
 			}
 			for _, record := range scopeLogs.LogRecords {
@@ -253,6 +268,7 @@ func Replay(ctx context.Context, source Source, config Config) (ReplayResult, er
 			}
 		}
 	}
+	result.Coverage.RecordsObservedKnown = recordsObservedKnown
 	return result, nil
 }
 

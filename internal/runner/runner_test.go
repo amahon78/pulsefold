@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/amahon78/pulsefold/internal/accounting"
 	"github.com/amahon78/pulsefold/internal/c1"
 	"github.com/amahon78/pulsefold/internal/c2"
 	"github.com/amahon78/pulsefold/internal/fixture"
@@ -20,11 +21,11 @@ func TestAnalyseProducesPayloadFreeDeterministicReport(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	first := Analyse(context.Background(), source(payload), input.Config{}, zeroC1Config(), zeroC2Config())
+	first := Analyse(context.Background(), source(payload), input.Config{}, zeroC1Config(), zeroC2Config(), accounting.Options{})
 	if first.Err != nil {
 		t.Fatal(first.Err)
 	}
-	second := Analyse(context.Background(), source(payload), input.Config{}, zeroC1Config(), zeroC2Config())
+	second := Analyse(context.Background(), source(payload), input.Config{}, zeroC1Config(), zeroC2Config(), accounting.Options{})
 	if second.Err != nil {
 		t.Fatal(second.Err)
 	}
@@ -45,6 +46,15 @@ func TestAnalyseProducesPayloadFreeDeterministicReport(t *testing.T) {
 	if !strings.Contains(encoded, "counterfactual reduction opportunity") || !strings.Contains(encoded, "\"status\": \"complete\"") {
 		t.Errorf("report lacks required V0 semantics: %s", encoded)
 	}
+	if first.Report.C1.Classification != accounting.Counterfactual || first.Report.C2.Classification != accounting.Inferred {
+		t.Errorf("analysis classifications = C1 %q, C2 %q", first.Report.C1.Classification, first.Report.C2.Classification)
+	}
+	if first.Report.Accounting.Coverage.C1.Coverage.Known && first.Report.Accounting.Coverage.C1.Coverage.Numerator != first.Report.C1.RecordsAnalysed {
+		t.Errorf("C1 coverage diverged from report counters: %#v", first.Report.Accounting.Coverage.C1)
+	}
+	if first.Report.Accounting.Wire.Known || first.Report.Accounting.Billing.Available || first.Report.Accounting.Billing.Reason != "billing_model_not_supplied" {
+		t.Errorf("default accounting semantics = %#v", first.Report.Accounting)
+	}
 }
 
 func TestAnalyseReturnsSafeFailureReportForMalformedInput(t *testing.T) {
@@ -52,7 +62,7 @@ func TestAnalyseReturnsSafeFailureReportForMalformedInput(t *testing.T) {
 	outcome := Analyse(context.Background(), input.ReaderSource{
 		Reader: strings.NewReader(`{"resourceLogs":` + secret),
 		Info:   input.SourceMetadata{Identity: "malformed", Kind: input.SourceOfflineReplay, Format: input.FormatOTLPJSON},
-	}, input.Config{}, zeroC1Config(), zeroC2Config())
+	}, input.Config{}, zeroC1Config(), zeroC2Config(), accounting.Options{})
 	if outcome.Err == nil || outcome.Report.Status != report.StatusInputFailed || outcome.Report.Failure.Code != "malformed_input" {
 		t.Fatalf("unexpected malformed outcome: %#v", outcome.Report)
 	}
@@ -63,6 +73,29 @@ func TestAnalyseReturnsSafeFailureReportForMalformedInput(t *testing.T) {
 	if strings.Contains(output.String(), secret) {
 		t.Error("input failure report leaked raw telemetry")
 	}
+	if outcome.Report.Accounting.Coverage.C1.Coverage.Known || outcome.Report.Accounting.Coverage.Input.RecordsObservedKnown {
+		t.Errorf("input failure accounting claimed unavailable analysis: %#v", outcome.Report.Accounting)
+	}
+}
+
+func TestAnalyseFailureMarksAnalysisCoverageUnavailable(t *testing.T) {
+	scenario := fixture.Generate(fixture.Config{Seed: 13, HighCardinalityCount: 2, LargeBodyBytes: 32})
+	payload, err := protojson.Marshal(scenario.Request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	config := c1.Config{Hash: func(value []byte) string {
+		cancel()
+		return "deterministic-test-bucket"
+	}}
+	outcome := Analyse(ctx, source(payload), input.Config{}, config, zeroC2Config(), accounting.Options{})
+	if outcome.Err == nil || outcome.Report.Status != report.StatusAnalysisFailed || outcome.Report.Failure.Code != "cancelled" {
+		t.Fatalf("unexpected interrupted outcome: %#v", outcome.Report)
+	}
+	if outcome.Report.Accounting.Coverage.C1.Coverage.Known || outcome.Report.Accounting.Coverage.C2.Coverage.Known || outcome.Report.Accounting.Coverage.C1.Coverage.Reason != "c1_not_completed" {
+		t.Errorf("analysis failure coverage = %#v", outcome.Report.Accounting.Coverage)
+	}
 }
 
 func TestAnalyseC2ReportDoesNotContainTemplateOrRawTelemetry(t *testing.T) {
@@ -71,7 +104,7 @@ func TestAnalyseC2ReportDoesNotContainTemplateOrRawTelemetry(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	outcome := Analyse(context.Background(), source(payload), input.Config{}, zeroC1Config(), zeroC2Config())
+	outcome := Analyse(context.Background(), source(payload), input.Config{}, zeroC1Config(), zeroC2Config(), accounting.Options{})
 	if outcome.Err != nil || outcome.Report.C2 == nil || outcome.Report.C2.SourceTemplateRecords == 0 {
 		t.Fatalf("unexpected C2 outcome: %#v", outcome)
 	}
