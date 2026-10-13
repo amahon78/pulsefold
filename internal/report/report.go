@@ -280,6 +280,9 @@ func limitations(value Report) []string {
 		items = append(items, "Estimated gross observability cost opportunity is unavailable: "+value.Accounting.Billing.Reason+".")
 	} else {
 		items = append(items, "Economic estimates use an operator-supplied generic billing model and are not net or realised savings.")
+		if value.Accounting.Billing.C1 != nil && value.Accounting.Billing.C2 != nil {
+			items = append(items, "C1 and C2 cost opportunities overlap: the C2 potential includes the C1 exact-repetition reduction and must not be added to it.")
+		}
 	}
 	return items
 }

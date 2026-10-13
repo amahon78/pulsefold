@@ -27,6 +27,8 @@ PF-1007 adds end-to-end text and JSON report tests for complete structural fixtu
 
 PF-1008 adds the deterministic `internal/harness` fault matrix across the complete V0 pipeline. It covers input failures, source-label attacks, replay-limit boundaries, secret and prompt-shaped content, C1 collision and caps, C2 caps and adversarial grouping, accounting availability, report integrity, renderer failure, replay isolation and payload-free output. Its eight-workload performance matrix and three-size scaling series report local allocations and throughput without machine-specific pass/fail thresholds.
 
+The V0 adversarial review adds `internal/runner/adversarial_test.go`. It protects two invariants: C2 opportunity beyond C1 never re-counts C1 exact repetition, and overlapping priced C1 and C2 opportunities always carry a committed limitation. Its other findings are Phase 2 gates documented in `docs/research/grok-v0-adversarial-review.md`.
+
 ### Scenario
 Synthetic end-to-end replay and report flows. Incident flows are post-V0.
 

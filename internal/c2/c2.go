@@ -21,7 +21,7 @@ import (
 
 const (
 	AlgorithmVersion          = "c2-conservative-drain-style-v1"
-	CandidatePolicyVersion    = "c2-report-only-no-parameters-v1"
+	CandidatePolicyVersion    = "c2-report-only-no-parameters-v2"
 	PartitionPolicyVersion    = "c2-redacted-resource-scope-severity-v1"
 	DefaultMaxClusters        = 10_000
 	DefaultMaxPartitions      = 10_000
@@ -249,8 +249,12 @@ func Analyse(ctx context.Context, batch redaction.Batch, c1Result c1.Result, con
 		result.CandidateRecords += representative.Count
 		result.Assignments = append(result.Assignments, Assignment{InputIndex: representative.InputIndex, Group: group, Weight: representative.Count})
 	}
-	if result.CandidateRecords >= result.InferredTemplateGroups {
-		result.AdditionalOpportunity = result.CandidateRecords - result.InferredTemplateGroups
+	// C1 has already counted exact duplicates inside each representative's
+	// weight. The structural opportunity beyond C1 is therefore the number of
+	// analysed representatives that collapse into an existing inferred group,
+	// not the weighted candidate count, which would re-claim C1's reduction.
+	if result.RecordsAnalysed >= result.InferredTemplateGroups {
+		result.AdditionalOpportunity = result.RecordsAnalysed - result.InferredTemplateGroups
 	}
 	return result, nil
 }

@@ -110,6 +110,8 @@ Source references are opaque but are not confidential: a low-entropy label can b
 
 Every report and manifest field is deterministic for identical input, configuration and analyser version except `manifest.created_at`. PulseFold does not claim byte-for-byte reproducibility across analyser, Go or dependency versions.
 
+The C2 `additional_counterfactual_records` value counts analysed C1 representatives that collapse into an existing inferred group. It never re-counts C1 exact duplicates (candidate policy `c2-report-only-no-parameters-v2`; v1 reports over-stated it by the C1 reduction). The priced C2 potential is measured over the C1-weighted candidate subset and overlaps the C1 opportunity; a committed limitation says so whenever both are priced. See `docs/research/grok-v0-adversarial-review.md`.
+
 ### Content lifecycle
 
 V0 stores no evidence content and always emits `content.state: not_stored`. The lifecycle record type supports `not_stored`, `available`, `expired` and `erased` with a time, a short machine reason code for `expired` and `erased`, and an opaque reference only for `available`. Lifecycle records are separate from the immutable manifest and do not change its commitment. Only `available` with a reference is reported as retrievable, and V0 has no backing store to resolve one.
