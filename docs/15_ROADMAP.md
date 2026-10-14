@@ -30,6 +30,8 @@ Exit:
 
 ## Milestone 2: Compact
 
+**Safety architecture:** Phase 1.5 complete, 2026-10-14. Active compaction remains unauthorised pending independent verification and PF-2001 authorisation.
+
 User outcome:
 
 > PulseFold safely reduces selected repetitive telemetry with auditable policies and recoverable evidence.

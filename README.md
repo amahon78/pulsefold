@@ -54,7 +54,7 @@ PulseFold V1 will answer:
 
 ## Current status
 
-**V0 scope is frozen. Phase 1 implementation is limited to the V0 analyser and its benchmark harness.**
+**V0 scope is frozen. Phase 1 laboratory implementation and Phase 1.5 safety architecture are complete. Phase 2, PF-2001 and active compaction have not started and are not authorised.**
 
 The current implementation accepts one bounded OTLP/JSON `ExportLogsServiceRequest` for offline replay. It applies a versioned redaction policy, bounded collision-safe C1 exact-duplicate analysis and bounded C2 structural-candidate analysis before emitting a coverage-aware shadow report. C2 is conservative, partitions by redacted resource and scope context plus severity, retains no extracted parameters and reports no template text. It is an isolated analysis input only and has no network listener or production-forwarding role.
 

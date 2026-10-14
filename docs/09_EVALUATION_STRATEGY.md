@@ -142,3 +142,26 @@ No agent feature should graduate from experimental without:
 - published scoring method
 - failure examples
 - repeatable run command
+
+## 8. Phase 1.5 active-compaction gates
+
+**Gate A, before PF-2001 implementation:** accept ADRs 0012 through 0016, the active-path contract and this evaluation plan; specify build/policy identity, destination representation, disabled-by-default scope and reproducible H-4/M-7 profiling. No forwarding integration or destructive policy is enabled.
+
+**Gate B, before experimental active transformation:** use a licensed public corpus plus independently fixed truth-labelled incident scenarios. Evaluate false duplicate classification, unsafe merge, error, rare-event, transition and trace/span preservation, redaction-created and telemetry-asserted opportunity, bypass, rollback, downstream outage, crash/held-window recovery, multi-instance consistency and destination alert/query replay where practical. Calibrate thresholds from evidence rather than inventing universal percentages. Require a production redaction policy, secondary-path recovery, policy-change audit and a tested kill/OOM topology.
+
+**Gate C, before production-capable claims:** demonstrate the Gate B contract under representative deployment load and configuration, recovery periods and destination semantics. Confirm resource envelopes, operational observability, upgrade/rollback behaviour and independent security review.
+
+### H-4/M-7 reproducible profile method
+
+Run the existing bounded resource observation and workload matrix on a recorded platform:
+
+```bash
+sw_vers || uname -a
+go version
+go test ./internal/harness -run TestObservedLargeWorkloadResources -v -count=1
+go test ./internal/harness -run '^$' -bench 'BenchmarkV0Pipeline(Matrix|Scaling)$' -benchmem -count=1
+```
+
+Record OS, CPU, Go version, `GOMAXPROCS`, elapsed time, allocation metrics and workload parameters. For peak RSS, run the same generated OTLP replay in an isolated process using the platform's documented `/usr/bin/time` RSS facility, record the exact generator seed, record count, body size, cardinality and caps, and retain no generated telemetry. RSS is a platform observation, not a guarantee. Before active enablement, profiles must include high-cardinality, near-input-cap, large-body and nested-structured workloads plus deadline/cancellation cases.
+
+On 2026-10-14, macOS 26.7.1 on an Apple M1 Pro with Go 1.27.2 and `GOMAXPROCS=2` produced a bounded 4,096-record, 16 KiB-body observation of 21,262,960 bytes total allocation and 15,128,032 bytes heap allocation. The 4,096 unique-record benchmark was 98,957,677 ns/op, 8.46 MB/s and 35,989,280 B/op. These are reproducible local baseline observations only, not RSS measurements, universal limits or deployment thresholds.

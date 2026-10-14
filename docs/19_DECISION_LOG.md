@@ -55,6 +55,21 @@ External investigation contracts precede a built-in investigator.
 ### D-017
 Go is the core implementation language. The canonical module path is `github.com/amahon78/pulsefold`.
 
+### D-018
+Destructive transformation preserves the declared destination representation, not merely analytical equality.
+
+### D-019
+C2 is permanently advisory and telemetry assertions retain explicit taint provenance.
+
+### D-020
+Active accounting is sequential and non-overlapping, with explicit coverage states.
+
+### D-021
+Resource exhaustion and uncertainty do not authorise destructive loss; active delivery requires explicit ownership and bypass semantics.
+
+### D-022
+Active behaviour has build, policy, configuration and recovery identity; integrity is not authentication.
+
 ## Pending
 
 ### P-002

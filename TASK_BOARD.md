@@ -109,7 +109,13 @@ Test replay, restart, blocked analysis output, malformed data, giant payloads, h
 
 **Delivered:** deterministic full-pipeline fault matrix with versioned JSON test output, replay boundary checks, state-cap and source-label attacks, adversarial content and C1/C2 checks, accounting and provenance checks, renderer-failure and restart-isolation tests, privacy scanning and workload plus scaling benchmarks. Results are local, synthetic laboratory observations rather than production thresholds.
 
+## Phase 1.5: Active-compaction safety architecture
+
+**Status:** Complete (2026-10-14). ADRs 0012 through 0016, the active-path contract and staged evaluation gates are accepted. This freezes safety architecture only and does not start Phase 2 or authorise active compaction.
+
 ## Phase 2: Safe compaction
+
+**Status:** Not started. Phase 1.5 safety architecture is complete; this does not authorise active compaction.
 
 ### PF-2001: compaction policy engine
 ### PF-2002: representative sample retention

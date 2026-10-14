@@ -1,6 +1,6 @@
 {
   "project": "PulseFold",
-  "status": "Phase 1",
+  "status": "Phase 1.5",
   "files": [
     "AGENTS.md",
     "go.mod",
@@ -29,6 +29,7 @@
     "docs/17_CODEX_PHASE0_BRIEF.md",
     "docs/18_NON_GOALS.md",
     "docs/19_DECISION_LOG.md",
+    "docs/20_ACTIVE_PATH_SAFETY_CONTRACT.md",
     "docs/adr/0001-opentelemetry-canonical-interface.md",
     "docs/adr/0002-ai-not-required-for-telemetry-plane.md",
     "docs/adr/0003-read-only-agents-first.md",
@@ -40,6 +41,11 @@
     "docs/adr/0009-evidence-manifest-and-content-lifecycle.md",
     "docs/adr/0010-external-investigation-contract-first.md",
     "docs/adr/0011-go-as-core-implementation-language.md",
+    "docs/adr/0012-destination-representation-preservation.md",
+    "docs/adr/0013-advisory-inference-and-telemetry-taint.md",
+    "docs/adr/0014-active-coverage-and-non-overlapping-accounting.md",
+    "docs/adr/0015-active-delivery-resource-and-bypass-safety.md",
+    "docs/adr/0016-active-behaviour-identity-and-recovery.md",
     "cmd/pulsefold/main.go",
     "cmd/pulsefold/main_test.go",
     "internal/c1/c1.go",

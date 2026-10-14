@@ -1,6 +1,6 @@
 # PulseFold Project State
 
-**Status:** V0 laboratory implementation complete, Phase 2 not started
+**Status:** Phase 1 laboratory implementation and Phase 1.5 safety architecture complete, Phase 2 not started
 **Working name:** PulseFold  
 **Tagline:** Keep the evidence. Fold the noise.  
 **Repository owner:** Personal/open source project  
@@ -60,6 +60,7 @@ The following are treated as locked until superseded by an ADR:
 - 2026-10-12: ADR 0011 accepted Go and `github.com/amahon78/pulsefold` as the core implementation language and module path. PF-1001 accepted a bounded offline OTLP/JSON replay boundary. It is not a production forwarding path.
 - 2026-10-13: PF-1002 added deterministic, truth-labelled synthetic OTLP fixtures and the versioned `v1-fixture-safety` redaction boundary. PF-1003 added bounded, collision-safe, report-only C1 analysis and the initial machine-readable report command. PF-1004 added bounded C2 structural candidate analysis after C1, with resource/scope and severity partitions, no raw parameter extraction, visible exclusions and synthetic correctness, partition and performance tests. PF-1005 added explicit captured-byte and record-denominator knownness, measured C1/C2 coverage, counterfactual and inferred classifications, unknown wire accounting and optional operator-supplied generic billing estimates using exact minor-unit arithmetic. It does not measure wire bytes or claim customer or net savings. PF-1006 added a payload-free evidence manifest to every report with fixed lineage, opaque source references, validated source labels, `not_stored` content state and an unauthenticated SHA-256 integrity commitment. It stores no evidence content and does not sign or authenticate reports. PF-1007 integrated these components into the first terminal-oriented and JSON V0 shadow report. It keeps measured input, C1 exact counterfactual opportunity, C2 inferred structural opportunity, economics, exclusions and unknowns separate, includes deterministic limitations and verifies the manifest consistency commitment without claiming authentication. PF-1008 completed the deterministic fault and performance laboratory harness across the offline pipeline, including bounded-resource, privacy, restart-isolation and adversarial cases plus machine-specific workload benchmarks.
 - Phase 1 completion means the V0 laboratory implementation is complete. It does not approve active compaction, production deployment, financial-savings claims or C2 for destructive transformation.
+- 2026-10-14: Phase 1.5 accepted ADRs 0012 through 0016 and the active-path safety contract. PF-2001 remains not started, active compaction remains unauthorised and the initial future experiment is secondary-path only.
 - Phase 1 benchmarks remain execution gates. PF-1004 benchmark results do not imply active-compaction safety, global cross-instance template stability or production readiness.
 
 ## Phase 0 exit condition

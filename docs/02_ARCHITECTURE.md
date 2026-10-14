@@ -42,6 +42,8 @@ PF-1007 presents these existing facts through one terminal or JSON shadow report
 
 The longer-term design retains explicit boundaries between telemetry transport, telemetry interpretation, deterministic compaction, signal detection, incident state, evidence manifests, investigation and routing. These capabilities are delivered in later phases only after the V0 safety and benchmark gates pass.
 
+Phase 1.5 defines the pre-implementation safety boundary for any future active path in [the active-path contract](20_ACTIVE_PATH_SAFETY_CONTRACT.md) and ADRs 0012 through 0016. It does not add an active path to the current implementation.
+
 ## 4. Telemetry plane versus control plane
 
 ### Telemetry plane
